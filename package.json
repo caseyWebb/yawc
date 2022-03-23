@@ -1,0 +1,17 @@
+{
+  "name": "yawc",
+  "version": "0.0.0",
+  "description": "Yet Another Wordle Clone",
+  "main": "index.js",
+  "repository": "https://github.com/caseyWebb/yawc",
+  "author": "Casey Webb <notcaseywebb@gmail.com> (https://caseyWebb.xyz)",
+  "license": "WTFPL",
+  "scripts": {
+    "build": "elm make src/Main.elm",
+    "develop": "elm reactor"
+  },
+  "devDependencies": {
+    "elm": "^0.19.1-5",
+    "elm-format": "^0.8.5"
+  }
+}
