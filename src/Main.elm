@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
@@ -68,11 +68,11 @@ init _ =
 
 parseWinningWord : String -> Dict Char (Set Int)
 parseWinningWord word =
-    List.indexedMap (\i2 l -> ( l, i2 )) (String.toList word)
+    List.indexedMap (\i l -> ( l, i )) (String.toList word)
         |> List.foldr
-            (\( l, i2 ) dict ->
+            (\( l, i ) dict ->
                 Dict.update l
-                    (Just << Set.insert i2 << Maybe.withDefault (Set.singleton i2))
+                    (Just << Set.insert i << Maybe.withDefault (Set.singleton i))
                     dict
             )
             Dict.empty
