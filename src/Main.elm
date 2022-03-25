@@ -343,7 +343,7 @@ view model =
 viewHeader : Model -> Html Msg
 viewHeader _ =
     header []
-        [ h1 [] [ text "Yet Another Wordle Clone" ]
+        [ a [ css [ Css.textDecoration Css.none ] ] [ h1 [] [ text "Yet Another Wordle Clone" ] ]
         ]
 
 
@@ -359,9 +359,7 @@ viewBody model =
             ]
         ]
         [ div
-            [ css
-                [ Css.minHeight (Css.px 30) ]
-            ]
+            [ css [ Css.minHeight (Css.px 60) ] ]
             [ model.message |> Maybe.map viewMessage |> Maybe.withDefault (text "") ]
         , viewGrid model
         , viewKeyboard model
@@ -371,7 +369,15 @@ viewBody model =
 viewMessage : String -> Html Msg
 viewMessage message =
     div
-        []
+        [ css
+            [ Css.backgroundColor (Css.hex "fff")
+            , Css.color (Css.hex "000")
+            , Css.fontSize (Css.px 18)
+            , Css.fontWeight Css.bold
+            , Css.padding (Css.px 20)
+            , Css.borderRadius (Css.px 4)
+            ]
+        ]
         [ text message ]
 
 
@@ -453,12 +459,25 @@ viewGridSquare : ( Char, Maybe LetterGuessResult ) -> Html Msg
 viewGridSquare ( letter, state ) =
     div
         [ css
-            [ Css.width (Css.px 50)
-            , Css.height (Css.px 50)
-            , Css.borderRadius (Css.px 5)
-            , Css.border3 (Css.px 1) Css.solid (Css.rgb 255 255 255)
-            , Css.backgroundColor (letterStateColor state)
-            ]
+            ([ Css.width (Css.px 62)
+             , Css.height (Css.px 62)
+             , Css.margin (Css.px 2)
+             , Css.fontWeight Css.bold
+             , Css.fontSize (Css.px 32)
+             , Css.lineHeight (Css.px 66)
+             , Css.textAlign Css.center
+             , Css.boxSizing Css.borderBox
+             ]
+                ++ (case letterStateColor state of
+                        Nothing ->
+                            [ Css.border3 (Css.px 2) Css.solid (Css.hex "3a3a3c") ]
+
+                        Just color ->
+                            [ Css.border3 (Css.px 2) Css.solid Css.transparent
+                            , Css.backgroundColor color
+                            ]
+                   )
+            )
         ]
         [ text <| String.fromChar letter ]
 
@@ -490,8 +509,18 @@ viewKeyboardButton : Model -> Char -> Html Msg
 viewKeyboardButton model letter =
     button
         [ css
-            [ Css.backgroundColor <| letterStateColor <| Maybe.andThen identity <| Dict.get letter model.letterStates
+            [ Dict.get letter model.letterStates
+                |> Maybe.andThen identity
+                |> letterStateColor
+                |> Maybe.withDefault (Css.rgb 129 131 132)
+                |> Css.backgroundColor
             , Css.color <| Css.rgb 255 255 255
+            , Css.height (Css.px 50)
+            , Css.width (Css.px 35)
+            , Css.margin (Css.px 3)
+            , Css.fontWeight Css.bold
+            , Css.borderRadius (Css.px 4)
+            , Css.borderStyle Css.none
             ]
         ]
         [ text <| String.fromChar letter ]
@@ -499,23 +528,30 @@ viewKeyboardButton model letter =
 
 viewFooter : Model -> Html Msg
 viewFooter _ =
-    footer []
+    let
+        linkStyles =
+            [ Css.textDecoration Css.none
+            , Css.fontWeight Css.bold
+            , Css.color (Css.hex "3a3a3c")
+            ]
+    in
+    footer [ css [ Css.color (Css.hex "272729"), Css.padding (Css.px 5) ] ]
         [ text "Made with <3 by "
-        , a [ href "https://caseyWebb.xyz" ] [ text "Casey Webb" ]
+        , a [ href "https://caseyWebb.xyz", css linkStyles ] [ text "Casey Webb" ]
         ]
 
 
-letterStateColor : Maybe LetterGuessResult -> Css.Color
-letterStateColor state =
-    case state of
-        Just CorrectPosition ->
-            Css.rgb 83 141 78
+letterStateColor : Maybe LetterGuessResult -> Maybe Css.Color
+letterStateColor =
+    Maybe.map
+        (\state ->
+            case state of
+                CorrectPosition ->
+                    Css.rgb 83 141 78
 
-        Just IncorrectPosition ->
-            Css.rgb 181 159 59
+                IncorrectPosition ->
+                    Css.rgb 181 159 59
 
-        Just NotInWord ->
-            Css.rgb 58 58 60
-
-        Nothing ->
-            Css.rgba 0 0 0 0
+                NotInWord ->
+                    Css.rgb 58 58 60
+        )
