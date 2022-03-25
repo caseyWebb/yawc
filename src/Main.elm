@@ -10,8 +10,8 @@ import Html.Styled.Events exposing (onClick)
 import Json.Decode as Decode
 import Process
 import Set exposing (Set)
-import Task
-import WordList exposing (getTodaysWord, isValidWord)
+import Task as Task
+import Words exposing (charIndiciesDict, getTodaysWord, isValidWord)
 
 
 
@@ -81,18 +81,6 @@ init _ =
       }
     , Task.perform GotTodaysWord getTodaysWord
     )
-
-
-charIndiciesDict : String -> Dict Char (Set Int)
-charIndiciesDict word =
-    List.indexedMap (\i l -> ( l, i )) (String.toList word)
-        |> List.foldr
-            (\( l, i ) dict ->
-                Dict.update l
-                    (Just << Set.insert i << Maybe.withDefault (Set.singleton i))
-                    dict
-            )
-            Dict.empty
 
 
 
