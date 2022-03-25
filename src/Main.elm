@@ -2,10 +2,9 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Browser.Navigation exposing (Key)
 import Css as Css
 import Dict exposing (Dict)
-import Html.Styled exposing (Html, a, button, div, footer, h1, header, i, text, toUnstyled)
+import Html.Styled exposing (Html, a, button, div, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
 import Json.Decode as Decode
 import Process
