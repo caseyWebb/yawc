@@ -1,4 +1,4 @@
-module Words exposing (getTodaysWord, isValidWord, charIndiciesDict)
+module Words exposing (getTodaysWord, isValidWord, charIndiciesDict, commonWords)
 
 
 import Dict as Dict exposing (Dict)

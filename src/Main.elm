@@ -4,10 +4,12 @@ import Browser
 import Browser.Events exposing (onKeyDown, onKeyPress)
 import Css as Css
 import Dict exposing (Dict)
-import Html.Styled exposing (Html, a, button, div, footer, h1, header, text, toUnstyled)
+import Grid as Grid
+import Html.Styled exposing (Html, a, div, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
-import Html.Styled.Events exposing (onClick)
 import Json.Decode as Decode
+import Keyboard as Keyboard
+import LetterGuessResult exposing (..)
 import Process
 import Set exposing (Set)
 import Task as Task
@@ -16,6 +18,28 @@ import Words exposing (charIndiciesDict, getTodaysWord, isValidWord)
 
 
 -- MAIN
+
+
+type alias Flags =
+    {}
+
+
+type alias Model =
+    { gameState : GameState
+    , todaysWord : String
+    , todaysWordCharIndiciesDict : Dict Char (Set Int) -- key = char, value = set of indices
+    , currentGuess : String
+    , guesses : List String
+    , guessResults : Dict Char LetterGuessResult
+    , message : Maybe String
+    , messageTimeoutId : Int
+    }
+
+
+type GameState
+    = Playing
+    | Won
+    | Lost
 
 
 main : Program Flags Model Msg
@@ -32,49 +56,13 @@ main =
         }
 
 
-
--- MODEL
-
-
-type alias Flags =
-    {}
-
-
-type alias Model =
-    { gameState : GameState
-    , todaysWord : String
-    , todaysWordCharIndiciesDict : Dict Char (Set Int) -- key = char, value = set of indices
-    , currentGuess : String
-    , guesses : List (List ( Char, LetterGuessResult ))
-    , letterStates : Dict Char (Maybe LetterGuessResult)
-    , message : Maybe String
-    , messageTimeoutId : Int
-    }
-
-
-type GameState
-    = Playing
-    | Won
-    | Lost
-
-
-type LetterGuessResult
-    = CorrectPosition
-    | IncorrectPosition
-    | NotInWord
-
-
 init : Flags -> ( Model, Cmd Msg )
 init _ =
     ( { todaysWord = ""
       , todaysWordCharIndiciesDict = Dict.empty
       , currentGuess = ""
       , guesses = []
-      , letterStates =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                |> String.toList
-                |> List.map (\c -> ( c, Nothing ))
-                |> Dict.fromList
+      , guessResults = Dict.empty
       , message = Nothing
       , messageTimeoutId = 0
       , gameState = Playing
@@ -122,7 +110,7 @@ update msg model =
                     Process.sleep 1000 |> Task.perform (\_ -> ClearMessage messageTimeoutId)
 
                 updatedGuessedWords =
-                    updateGuessedWords model
+                    model.guesses ++ [ model.currentGuess ]
 
                 updatedGameState =
                     if List.length updatedGuessedWords == 6 then
@@ -147,7 +135,7 @@ update msg model =
                     ( { model
                         | currentGuess = ""
                         , guesses = updatedGuessedWords
-                        , letterStates = updateLetterStates model
+                        , guessResults = updateLetterStates model
                         , gameState = updatedGameState
                         , message =
                             case updatedGameState of
@@ -186,18 +174,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-updateGuessedWords : Model -> List (List ( Char, LetterGuessResult ))
-updateGuessedWords model =
-    model.guesses
-        ++ [ List.indexedMap
-                (\i letter ->
-                    ( letter, checkLetterState model i letter )
-                )
-                (String.toList model.currentGuess)
-           ]
-
-
-updateLetterStates : Model -> Dict Char (Maybe LetterGuessResult)
+updateLetterStates : Model -> Dict Char LetterGuessResult
 updateLetterStates model =
     let
         newStates =
@@ -205,27 +182,24 @@ updateLetterStates model =
                 List.indexedMap
                     (\guessIndex letter ->
                         ( letter
-                        , Just <|
-                            case ( checkLetterState model guessIndex letter, Dict.get letter model.letterStates |> Maybe.andThen identity ) of
-                                ( CorrectPosition, _ ) ->
-                                    CorrectPosition
+                        , case
+                            ( checkLetterState model guessIndex letter
+                            , Dict.get letter model.guessResults
+                            )
+                          of
+                            ( InWord newKnownGood newKnownBad, Just (InWord existingKnownGood existingKnownBad) ) ->
+                                InWord (Set.union newKnownGood existingKnownGood) (Set.union newKnownBad existingKnownBad)
 
-                                ( _, Just CorrectPosition ) ->
-                                    CorrectPosition
+                            ( InWord knownGood knownBad, _ ) ->
+                                InWord knownGood knownBad
 
-                                ( IncorrectPosition, _ ) ->
-                                    IncorrectPosition
-
-                                ( _, Just IncorrectPosition ) ->
-                                    IncorrectPosition
-
-                                ( _, _ ) ->
-                                    NotInWord
+                            ( _, _ ) ->
+                                NotInWord
                         )
                     )
                     (String.toList model.currentGuess)
     in
-    Dict.union newStates model.letterStates
+    Dict.union newStates model.guessResults
 
 
 checkLetterState : Model -> Int -> Char -> LetterGuessResult
@@ -236,10 +210,10 @@ checkLetterState model guessIndex letter =
 
         Just actualIndicies ->
             if Set.member guessIndex actualIndicies then
-                CorrectPosition
+                InWord (Set.singleton guessIndex) Set.empty
 
             else
-                IncorrectPosition
+                InWord Set.empty (Set.singleton guessIndex)
 
 
 
@@ -365,8 +339,19 @@ viewBody model =
         [ div
             [ css [ Css.minHeight (Css.px 60) ] ]
             [ model.message |> Maybe.map viewMessage |> Maybe.withDefault (text "") ]
-        , viewGrid model
-        , viewKeyboard model
+        , Grid.view
+            { currentGuess = model.currentGuess
+            , pastGuesses = model.guesses
+            , pastGuessResults = model.guessResults
+            }
+        , Keyboard.view
+            { pastGuessResults = model.guessResults
+            }
+            (\msg ->
+                case msg of
+                    Keyboard.KeyClicked letter ->
+                        UpdateCurrentGuess <| String.append model.currentGuess (String.fromChar letter)
+            )
         ]
 
 
@@ -385,153 +370,6 @@ viewMessage message =
         [ text message ]
 
 
-viewGrid : Model -> Html Msg
-viewGrid model =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.column
-            , Css.justifyContent Css.spaceBetween
-            , Css.alignItems Css.center
-            ]
-        ]
-        (viewGuessedWords model.guesses
-            ++ (if List.length model.guesses == 6 then
-                    []
-
-                else
-                    [ viewCurrentGuess model.currentGuess
-                    , viewBlankRows (5 - List.length model.guesses)
-                    ]
-               )
-        )
-
-
-viewGuessedWords : List (List ( Char, LetterGuessResult )) -> List (Html Msg)
-viewGuessedWords =
-    List.map (viewRow << List.map viewGuessedGridSquare)
-
-
-viewFlexContainer : Css.FlexDirectionOrWrap (Css.FlexDirection {}) -> List (Html Msg) -> Html Msg
-viewFlexContainer direction =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection direction
-            , Css.justifyContent Css.spaceBetween
-            ]
-        ]
-
-
-viewRow : List (Html Msg) -> Html Msg
-viewRow =
-    viewFlexContainer Css.row
-
-
-viewColumn : List (Html Msg) -> Html Msg
-viewColumn =
-    viewFlexContainer Css.column
-
-
-viewCurrentGuess : String -> Html Msg
-viewCurrentGuess word =
-    let
-        letters =
-            String.toList word
-    in
-    viewRow <|
-        List.map (\l -> viewGridSquare ( l, Nothing )) letters
-            ++ List.repeat (5 - List.length letters) viewEmptyGridSquare
-
-
-viewBlankRows : Int -> Html Msg
-viewBlankRows n =
-    viewColumn <| List.repeat n (viewRow (List.repeat 5 viewEmptyGridSquare))
-
-
-viewEmptyGridSquare : Html Msg
-viewEmptyGridSquare =
-    viewGridSquare ( ' ', Nothing )
-
-
-viewGuessedGridSquare : ( Char, LetterGuessResult ) -> Html Msg
-viewGuessedGridSquare ( letter, state ) =
-    viewGridSquare ( letter, Just state )
-
-
-viewGridSquare : ( Char, Maybe LetterGuessResult ) -> Html Msg
-viewGridSquare ( letter, state ) =
-    div
-        [ css
-            ([ Css.width (Css.px 62)
-             , Css.height (Css.px 62)
-             , Css.margin (Css.px 2)
-             , Css.fontWeight Css.bold
-             , Css.fontSize (Css.px 32)
-             , Css.lineHeight (Css.px 66)
-             , Css.textAlign Css.center
-             , Css.boxSizing Css.borderBox
-             ]
-                ++ (case letterStateColor state of
-                        Nothing ->
-                            [ Css.border3 (Css.px 2) Css.solid (Css.hex "3a3a3c") ]
-
-                        Just color ->
-                            [ Css.border3 (Css.px 2) Css.solid Css.transparent
-                            , Css.backgroundColor color
-                            ]
-                   )
-            )
-        ]
-        [ text <| String.fromChar letter ]
-
-
-viewKeyboard : Model -> Html Msg
-viewKeyboard model =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.column
-            ]
-        ]
-        ([ "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM" ] |> List.map (viewKeyboardRow model))
-
-
-viewKeyboardRow : Model -> String -> Html Msg
-viewKeyboardRow model row =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.row
-            , Css.justifyContent Css.center
-            ]
-        ]
-        (List.map (viewKeyboardButton model) (String.toList row))
-
-
-viewKeyboardButton : Model -> Char -> Html Msg
-viewKeyboardButton model letter =
-    button
-        [ css
-            [ Dict.get letter model.letterStates
-                |> Maybe.andThen identity
-                |> letterStateColor
-                |> Maybe.withDefault (Css.rgb 129 131 132)
-                |> Css.backgroundColor
-            , Css.color <| Css.rgb 255 255 255
-            , Css.height (Css.px 50)
-            , Css.width (Css.px 35)
-            , Css.margin (Css.px 3)
-            , Css.fontWeight Css.bold
-            , Css.borderRadius (Css.px 4)
-            , Css.borderStyle Css.none
-            , Css.cursor Css.pointer
-            ]
-        , onClick (UpdateCurrentGuess (String.append model.currentGuess (String.fromChar letter)))
-        ]
-        [ text <| String.fromChar letter ]
-
-
 viewFooter : Model -> Html Msg
 viewFooter _ =
     let
@@ -545,19 +383,3 @@ viewFooter _ =
         [ text "Made with <3 by "
         , a [ href "https://caseyWebb.xyz", css linkStyles ] [ text "Casey Webb" ]
         ]
-
-
-letterStateColor : Maybe LetterGuessResult -> Maybe Css.Color
-letterStateColor =
-    Maybe.map
-        (\state ->
-            case state of
-                CorrectPosition ->
-                    Css.rgb 83 141 78
-
-                IncorrectPosition ->
-                    Css.rgb 181 159 59
-
-                NotInWord ->
-                    Css.rgb 58 58 60
-        )
