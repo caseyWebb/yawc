@@ -95,13 +95,17 @@ update msg model =
             ( { model | currentGuess = updatedGuess }, Cmd.none )
 
         SubmitCurrentGuess ->
-            ( { model
-                | currentGuess = []
-                , guessedWords = updateGuessedWords model
-                , letterStates = updateLetterStates model
-              }
-            , Cmd.none
-            )
+            if List.length model.guessedWords == 5 then
+                ( model, Cmd.none )
+
+            else
+                ( { model
+                    | currentGuess = []
+                    , guessedWords = updateGuessedWords model
+                    , letterStates = updateLetterStates model
+                  }
+                , Cmd.none
+                )
 
         NoOp ->
             ( model, Cmd.none )
@@ -267,46 +271,54 @@ viewGrid model =
             , Css.alignItems Css.center
             ]
         ]
-        [ viewGuessedWords model.guessedWords
-        , viewCurrentGuess model.currentGuess
-        ]
+        (viewGuessedWords model.guessedWords
+            ++ (if List.length model.guessedWords == 5 then
+                    []
+
+                else
+                    [ viewCurrentGuess model.currentGuess
+                    , viewBlankRows (4 - List.length model.guessedWords)
+                    ]
+               )
+        )
 
 
-viewGuessedWords : List (List ( Char, LetterGuessResult )) -> Html Msg
+viewGuessedWords : List (List ( Char, LetterGuessResult )) -> List (Html Msg)
 viewGuessedWords =
+    List.map (viewRow << List.map viewGuessedGridSquare)
+
+
+viewFlexContainer : Css.FlexDirectionOrWrap (Css.FlexDirection {}) -> List (Html Msg) -> Html Msg
+viewFlexContainer direction =
     div
         [ css
             [ Css.displayFlex
-            , Css.flexDirection Css.column
+            , Css.flexDirection direction
             , Css.justifyContent Css.spaceBetween
             ]
         ]
-        << List.map (viewRow << List.map viewGuessedGridSquare)
 
 
 viewRow : List (Html Msg) -> Html Msg
 viewRow =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.row
-            , Css.justifyContent Css.spaceBetween
-            ]
-        ]
+    viewFlexContainer Css.row
+
+
+viewColumn : List (Html Msg) -> Html Msg
+viewColumn =
+    viewFlexContainer Css.column
 
 
 viewCurrentGuess : List Char -> Html Msg
 viewCurrentGuess letters =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.row
-            , Css.justifyContent Css.spaceBetween
-            ]
-        ]
-    <|
+    viewRow <|
         List.map (\l -> viewGridSquare ( l, Nothing )) letters
             ++ List.repeat (5 - List.length letters) viewEmptyGridSquare
+
+
+viewBlankRows : Int -> Html Msg
+viewBlankRows n =
+    viewColumn <| List.repeat n (viewRow (List.repeat 5 viewEmptyGridSquare))
 
 
 viewEmptyGridSquare : Html Msg
