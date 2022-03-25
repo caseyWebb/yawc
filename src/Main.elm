@@ -9,6 +9,8 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href)
 import Json.Decode as Decode
 import Set exposing (Set)
+import Task
+import WordList exposing (getTodaysWord)
 
 
 
@@ -38,7 +40,7 @@ type alias Flags =
 
 
 type alias Model =
-    { winningWord : Dict Char (Set Int) -- key = char, value = set of indices
+    { winningWordCharIndiciesDict : Dict Char (Set Int) -- key = char, value = set of indices
     , currentGuess : List Char
     , guessedWords : List (List ( Char, LetterGuessResult ))
     , letterStates : Dict Char (Maybe LetterGuessResult)
@@ -53,7 +55,7 @@ type LetterGuessResult
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( { winningWord = parseWinningWord "DOLOR"
+    ( { winningWordCharIndiciesDict = Dict.empty
       , currentGuess = []
       , guessedWords = []
       , letterStates =
@@ -62,12 +64,12 @@ init _ =
                 |> List.map (\c -> ( c, Nothing ))
                 |> Dict.fromList
       }
-    , Cmd.none
+    , Task.perform GotTodaysWord getTodaysWord
     )
 
 
-parseWinningWord : String -> Dict Char (Set Int)
-parseWinningWord word =
+charIndiciesDict : String -> Dict Char (Set Int)
+charIndiciesDict word =
     List.indexedMap (\i l -> ( l, i )) (String.toList word)
         |> List.foldr
             (\( l, i ) dict ->
@@ -83,7 +85,8 @@ parseWinningWord word =
 
 
 type Msg
-    = UpdateCurrentGuess (List Char)
+    = GotTodaysWord String
+    | UpdateCurrentGuess (List Char)
     | SubmitCurrentGuess
     | NoOp
 
@@ -91,6 +94,9 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        GotTodaysWord todaysWord ->
+            ( { model | winningWordCharIndiciesDict = charIndiciesDict todaysWord }, Cmd.none )
+
         UpdateCurrentGuess updatedGuess ->
             ( { model | currentGuess = updatedGuess }, Cmd.none )
 
@@ -149,7 +155,7 @@ updateLetterStates model =
 
 checkLetterState : Model -> Int -> Char -> LetterGuessResult
 checkLetterState model guessIndex letter =
-    case Dict.get letter model.winningWord of
+    case Dict.get letter model.winningWordCharIndiciesDict of
         Nothing ->
             NotInWord
 
