@@ -5,12 +5,13 @@ import Browser.Events exposing (onKeyDown)
 import Browser.Navigation exposing (Key)
 import Css as Css
 import Dict exposing (Dict)
-import Html.Styled exposing (..)
+import Html.Styled exposing (Html, a, button, div, footer, h1, header, i, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
 import Json.Decode as Decode
+import Process
 import Set exposing (Set)
 import Task
-import WordList exposing (getTodaysWord)
+import WordList exposing (getTodaysWord, isValidWord)
 
 
 
@@ -40,11 +41,21 @@ type alias Flags =
 
 
 type alias Model =
-    { winningWordCharIndiciesDict : Dict Char (Set Int) -- key = char, value = set of indices
-    , currentGuess : List Char
-    , guessedWords : List (List ( Char, LetterGuessResult ))
+    { gameState : GameState
+    , todaysWord : String
+    , todaysWordCharIndiciesDict : Dict Char (Set Int) -- key = char, value = set of indices
+    , currentGuess : String
+    , guesses : List (List ( Char, LetterGuessResult ))
     , letterStates : Dict Char (Maybe LetterGuessResult)
+    , message : Maybe String
+    , messageTimeoutId : Int
     }
+
+
+type GameState
+    = Playing
+    | Won
+    | Lost
 
 
 type LetterGuessResult
@@ -55,14 +66,18 @@ type LetterGuessResult
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( { winningWordCharIndiciesDict = Dict.empty
-      , currentGuess = []
-      , guessedWords = []
+    ( { todaysWord = ""
+      , todaysWordCharIndiciesDict = Dict.empty
+      , currentGuess = ""
+      , guesses = []
       , letterStates =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                 |> String.toList
                 |> List.map (\c -> ( c, Nothing ))
                 |> Dict.fromList
+      , message = Nothing
+      , messageTimeoutId = 0
+      , gameState = Playing
       }
     , Task.perform GotTodaysWord getTodaysWord
     )
@@ -86,8 +101,9 @@ charIndiciesDict word =
 
 type Msg
     = GotTodaysWord String
-    | UpdateCurrentGuess (List Char)
+    | UpdateCurrentGuess String
     | SubmitCurrentGuess
+    | ClearMessage Int
     | NoOp
 
 
@@ -95,23 +111,88 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotTodaysWord todaysWord ->
-            ( { model | winningWordCharIndiciesDict = charIndiciesDict todaysWord }, Cmd.none )
+            ( { model
+                | todaysWord = todaysWord
+                , todaysWordCharIndiciesDict = charIndiciesDict todaysWord
+              }
+            , Cmd.none
+            )
 
         UpdateCurrentGuess updatedGuess ->
-            ( { model | currentGuess = updatedGuess }, Cmd.none )
-
-        SubmitCurrentGuess ->
-            if List.length model.guessedWords == 5 then
-                ( model, Cmd.none )
+            if model.gameState == Playing then
+                ( { model | currentGuess = updatedGuess }, Cmd.none )
 
             else
-                ( { model
-                    | currentGuess = []
-                    , guessedWords = updateGuessedWords model
-                    , letterStates = updateLetterStates model
-                  }
-                , Cmd.none
-                )
+                ( model, Cmd.none )
+
+        SubmitCurrentGuess ->
+            let
+                messageTimeoutId =
+                    model.messageTimeoutId + 1
+
+                clearMessageAfter1Sec =
+                    Process.sleep 1000 |> Task.perform (\_ -> ClearMessage messageTimeoutId)
+
+                updatedGuessedWords =
+                    updateGuessedWords model
+
+                updatedGameState =
+                    if List.length updatedGuessedWords == 5 then
+                        Lost
+
+                    else if model.currentGuess == model.todaysWord then
+                        Won
+
+                    else
+                        Playing
+            in
+            if model.gameState == Playing then
+                if String.length model.currentGuess < 5 then
+                    ( { model
+                        | message = Just "Not enough letters"
+                        , messageTimeoutId = messageTimeoutId
+                      }
+                    , clearMessageAfter1Sec
+                    )
+
+                else if isValidWord model.currentGuess then
+                    ( { model
+                        | currentGuess = ""
+                        , guesses = updatedGuessedWords
+                        , letterStates = updateLetterStates model
+                        , gameState = updatedGameState
+                        , message =
+                            case updatedGameState of
+                                Playing ->
+                                    Nothing
+
+                                Won ->
+                                    Just "You win!"
+
+                                Lost ->
+                                    Just model.todaysWord
+                        , messageTimeoutId = messageTimeoutId
+                      }
+                    , Cmd.none
+                    )
+
+                else
+                    ( { model
+                        | message = Just ("\"" ++ model.currentGuess ++ "\" not in word list")
+                        , messageTimeoutId = messageTimeoutId
+                      }
+                    , clearMessageAfter1Sec
+                    )
+
+            else
+                ( model, Cmd.none )
+
+        ClearMessage messageTimeoutId ->
+            if messageTimeoutId == model.messageTimeoutId then
+                ( { model | message = Nothing }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -119,7 +200,13 @@ update msg model =
 
 updateGuessedWords : Model -> List (List ( Char, LetterGuessResult ))
 updateGuessedWords model =
-    model.guessedWords ++ [ List.indexedMap (\i letter -> ( letter, checkLetterState model i letter )) model.currentGuess ]
+    model.guesses
+        ++ [ List.indexedMap
+                (\i letter ->
+                    ( letter, checkLetterState model i letter )
+                )
+                (String.toList model.currentGuess)
+           ]
 
 
 updateLetterStates : Model -> Dict Char (Maybe LetterGuessResult)
@@ -148,14 +235,14 @@ updateLetterStates model =
                                     NotInWord
                         )
                     )
-                    model.currentGuess
+                    (String.toList model.currentGuess)
     in
     Dict.union newStates model.letterStates
 
 
 checkLetterState : Model -> Int -> Char -> LetterGuessResult
 checkLetterState model guessIndex letter =
-    case Dict.get letter model.winningWordCharIndiciesDict of
+    case Dict.get letter model.todaysWordCharIndiciesDict of
         Nothing ->
             NotInWord
 
@@ -178,17 +265,22 @@ subscriptions model =
             (\key ->
                 case key of
                     Enter ->
-                        if List.length model.currentGuess == 5 then
-                            SubmitCurrentGuess
-
-                        else
-                            NoOp
+                        SubmitCurrentGuess
 
                     Backspace ->
-                        UpdateCurrentGuess <| Maybe.withDefault [] <| Maybe.map List.reverse <| List.tail <| List.reverse model.currentGuess
+                        model.currentGuess
+                            |> String.toList
+                            |> List.reverse
+                            |> List.tail
+                            |> Maybe.map List.reverse
+                            |> Maybe.withDefault []
+                            |> String.fromList
+                            |> UpdateCurrentGuess
 
                     Character c ->
-                        UpdateCurrentGuess <| List.take 5 (model.currentGuess ++ [ Char.toUpper c ])
+                        List.take 5 (String.toList model.currentGuess ++ [ Char.toUpper c ])
+                            |> String.fromList
+                            |> UpdateCurrentGuess
 
                     _ ->
                         NoOp
@@ -260,11 +352,28 @@ viewBody : Model -> Html Msg
 viewBody model =
     div
         [ css
-            []
+            [ Css.displayFlex
+            , Css.flexDirection Css.column
+            , Css.justifyContent Css.spaceAround
+            , Css.alignItems Css.center
+            , Css.height (Css.vh 80)
+            ]
         ]
-        [ viewGrid model
+        [ div
+            [ css
+                [ Css.minHeight (Css.px 30) ]
+            ]
+            [ model.message |> Maybe.map viewMessage |> Maybe.withDefault (text "") ]
+        , viewGrid model
         , viewKeyboard model
         ]
+
+
+viewMessage : String -> Html Msg
+viewMessage message =
+    div
+        []
+        [ text message ]
 
 
 viewGrid : Model -> Html Msg
@@ -277,13 +386,13 @@ viewGrid model =
             , Css.alignItems Css.center
             ]
         ]
-        (viewGuessedWords model.guessedWords
-            ++ (if List.length model.guessedWords == 5 then
+        (viewGuessedWords model.guesses
+            ++ (if List.length model.guesses == 5 then
                     []
 
                 else
                     [ viewCurrentGuess model.currentGuess
-                    , viewBlankRows (4 - List.length model.guessedWords)
+                    , viewBlankRows (4 - List.length model.guesses)
                     ]
                )
         )
@@ -315,8 +424,12 @@ viewColumn =
     viewFlexContainer Css.column
 
 
-viewCurrentGuess : List Char -> Html Msg
-viewCurrentGuess letters =
+viewCurrentGuess : String -> Html Msg
+viewCurrentGuess word =
+    let
+        letters =
+            String.toList word
+    in
     viewRow <|
         List.map (\l -> viewGridSquare ( l, Nothing )) letters
             ++ List.repeat (5 - List.length letters) viewEmptyGridSquare
