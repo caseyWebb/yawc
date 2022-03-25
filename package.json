@@ -7,8 +7,9 @@
   "author": "Casey Webb <notcaseywebb@gmail.com> (https://caseyWebb.xyz)",
   "license": "WTFPL",
   "scripts": {
-    "build": "elm make src/Main.elm",
-    "develop": "elm reactor"
+    "build": "elm make --optimize --output=dist/index.html src/Main.elm ",
+    "develop": "elm reactor",
+    "deploy:pages": "yarn build; cd dist; git add --all; git commit -m 'deploy'; git push origin gh-pages"
   },
   "devDependencies": {
     "elm": "^0.19.1-5",
