@@ -6,6 +6,7 @@ import Css as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, a, button, div, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
+import Html.Styled.Events exposing (onClick)
 import Json.Decode as Decode
 import Process
 import Set exposing (Set)
@@ -119,7 +120,7 @@ update msg model =
 
         UpdateCurrentGuess updatedGuess ->
             if model.gameState == Playing then
-                ( { model | currentGuess = updatedGuess }, Cmd.none )
+                ( { model | currentGuess = updatedGuess |> String.left 5 |> String.toUpper }, Cmd.none )
 
             else
                 ( model, Cmd.none )
@@ -267,18 +268,12 @@ subscriptions model =
                         SubmitCurrentGuess
 
                     Backspace ->
-                        model.currentGuess
-                            |> String.toList
-                            |> List.reverse
-                            |> List.tail
-                            |> Maybe.map List.reverse
-                            |> Maybe.withDefault []
-                            |> String.fromList
+                        String.dropRight 1 model.currentGuess
                             |> UpdateCurrentGuess
 
                     Character c ->
-                        List.take 5 (String.toList model.currentGuess ++ [ Char.toUpper c ])
-                            |> String.fromList
+                        String.fromChar c
+                            |> String.append model.currentGuess
                             |> UpdateCurrentGuess
 
                     _ ->
@@ -528,7 +523,9 @@ viewKeyboardButton model letter =
             , Css.fontWeight Css.bold
             , Css.borderRadius (Css.px 4)
             , Css.borderStyle Css.none
+            , Css.cursor Css.pointer
             ]
+        , onClick (UpdateCurrentGuess (String.append model.currentGuess (String.fromChar letter)))
         ]
         [ text <| String.fromChar letter ]
 
