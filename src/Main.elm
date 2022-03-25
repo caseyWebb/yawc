@@ -343,7 +343,14 @@ view model =
 viewHeader : Model -> Html Msg
 viewHeader _ =
     header []
-        [ a [ css [ Css.textDecoration Css.none ] ] [ h1 [] [ text "Yet Another Wordle Clone" ] ]
+        [ a
+            [ href "https://github.com/caseyWebb/YAWC"
+            , css
+                [ Css.textDecoration Css.none
+                , Css.color (Css.hex "fff")
+                ]
+            ]
+            [ h1 [] [ text "Yet Another Wordle Clone" ] ]
         ]
 
 
