@@ -137,7 +137,7 @@ update msg model =
                     updateGuessedWords model
 
                 updatedGameState =
-                    if List.length updatedGuessedWords == 5 then
+                    if List.length updatedGuessedWords == 6 then
                         Lost
 
                     else if model.currentGuess == model.todaysWord then
@@ -394,12 +394,12 @@ viewGrid model =
             ]
         ]
         (viewGuessedWords model.guesses
-            ++ (if List.length model.guesses == 5 then
+            ++ (if List.length model.guesses == 6 then
                     []
 
                 else
                     [ viewCurrentGuess model.currentGuess
-                    , viewBlankRows (4 - List.length model.guesses)
+                    , viewBlankRows (5 - List.length model.guesses)
                     ]
                )
         )
