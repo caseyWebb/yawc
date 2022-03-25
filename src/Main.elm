@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Events exposing (onKeyDown)
+import Browser.Events exposing (onKeyDown, onKeyPress)
 import Css as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, a, button, div, footer, h1, header, text, toUnstyled)
@@ -260,26 +260,40 @@ checkLetterState model guessIndex letter =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    onKeyDown <|
-        Decode.map
-            (\key ->
-                case key of
-                    Enter ->
-                        SubmitCurrentGuess
+    Sub.batch
+        [ onKeyPress <|
+            Decode.map
+                (\key ->
+                    case key of
+                        Character c ->
+                            if Char.isAlpha c then
+                                String.fromChar c
+                                    |> String.append model.currentGuess
+                                    |> UpdateCurrentGuess
 
-                    Backspace ->
-                        String.dropRight 1 model.currentGuess
-                            |> UpdateCurrentGuess
+                            else
+                                NoOp
 
-                    Character c ->
-                        String.fromChar c
-                            |> String.append model.currentGuess
-                            |> UpdateCurrentGuess
+                        _ ->
+                            NoOp
+                )
+                keyDecoder
+        , onKeyDown <|
+            Decode.map
+                (\key ->
+                    case key of
+                        Enter ->
+                            SubmitCurrentGuess
 
-                    _ ->
-                        NoOp
-            )
-            keyDecoder
+                        Backspace ->
+                            String.dropRight 1 model.currentGuess
+                                |> UpdateCurrentGuess
+
+                        _ ->
+                            NoOp
+                )
+                keyDecoder
+        ]
 
 
 type Key
