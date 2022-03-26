@@ -12,6 +12,7 @@ import Keyboard as Keyboard
 import LetterGuessResult exposing (..)
 import Process
 import Set exposing (Set)
+import Solver
 import Task as Task
 import Words exposing (charIndiciesDict, getTodaysWord, isValidWord)
 
@@ -80,6 +81,7 @@ type Msg
     | UpdateCurrentGuess String
     | SubmitCurrentGuess
     | ClearMessage Int
+    | GetHint
     | NoOp
 
 
@@ -95,73 +97,10 @@ update msg model =
             )
 
         UpdateCurrentGuess updatedGuess ->
-            if model.gameState == Playing then
-                ( { model | currentGuess = updatedGuess |> String.left 5 |> String.toUpper }, Cmd.none )
-
-            else
-                ( model, Cmd.none )
+            updateCurrentGuess model updatedGuess
 
         SubmitCurrentGuess ->
-            let
-                messageTimeoutId =
-                    model.messageTimeoutId + 1
-
-                clearMessageAfter1Sec =
-                    Process.sleep 1000 |> Task.perform (\_ -> ClearMessage messageTimeoutId)
-
-                updatedGuessedWords =
-                    model.guesses ++ [ model.currentGuess ]
-
-                updatedGameState =
-                    if List.length updatedGuessedWords == 6 then
-                        Lost
-
-                    else if model.currentGuess == model.todaysWord then
-                        Won
-
-                    else
-                        Playing
-            in
-            if model.gameState == Playing then
-                if String.length model.currentGuess < 5 then
-                    ( { model
-                        | message = Just "Not enough letters"
-                        , messageTimeoutId = messageTimeoutId
-                      }
-                    , clearMessageAfter1Sec
-                    )
-
-                else if isValidWord model.currentGuess then
-                    ( { model
-                        | currentGuess = ""
-                        , guesses = updatedGuessedWords
-                        , guessResults = updateLetterStates model
-                        , gameState = updatedGameState
-                        , message =
-                            case updatedGameState of
-                                Playing ->
-                                    Nothing
-
-                                Won ->
-                                    Just "You win!"
-
-                                Lost ->
-                                    Just model.todaysWord
-                        , messageTimeoutId = messageTimeoutId
-                      }
-                    , Cmd.none
-                    )
-
-                else
-                    ( { model
-                        | message = Just ("\"" ++ model.currentGuess ++ "\" not in word list")
-                        , messageTimeoutId = messageTimeoutId
-                      }
-                    , clearMessageAfter1Sec
-                    )
-
-            else
-                ( model, Cmd.none )
+            submitCurrentGuess model
 
         ClearMessage messageTimeoutId ->
             if messageTimeoutId == model.messageTimeoutId then
@@ -170,8 +109,87 @@ update msg model =
             else
                 ( model, Cmd.none )
 
+        GetHint ->
+            Solver.nextGuess model.guessResults
+                |> updateCurrentGuess model
+                |> Tuple.first
+                |> submitCurrentGuess
+
         NoOp ->
             ( model, Cmd.none )
+
+
+updateCurrentGuess : Model -> String -> ( Model, Cmd msg )
+updateCurrentGuess model updatedGuess =
+    if model.gameState == Playing then
+        ( { model | currentGuess = updatedGuess |> String.left 5 |> String.toUpper }, Cmd.none )
+
+    else
+        ( model, Cmd.none )
+
+
+submitCurrentGuess : Model -> ( Model, Cmd Msg )
+submitCurrentGuess model =
+    let
+        messageTimeoutId =
+            model.messageTimeoutId + 1
+
+        clearMessageAfter1Sec =
+            Process.sleep 1000 |> Task.perform (\_ -> ClearMessage messageTimeoutId)
+
+        updatedGuessedWords =
+            model.guesses ++ [ model.currentGuess ]
+
+        updatedGameState =
+            if List.length updatedGuessedWords == 6 then
+                Lost
+
+            else if model.currentGuess == model.todaysWord then
+                Won
+
+            else
+                Playing
+    in
+    if model.gameState == Playing then
+        if String.length model.currentGuess < 5 then
+            ( { model
+                | message = Just "Not enough letters"
+                , messageTimeoutId = messageTimeoutId
+              }
+            , clearMessageAfter1Sec
+            )
+
+        else if isValidWord model.currentGuess then
+            ( { model
+                | currentGuess = ""
+                , guesses = updatedGuessedWords
+                , guessResults = updateLetterStates model
+                , gameState = updatedGameState
+                , message =
+                    case updatedGameState of
+                        Playing ->
+                            Nothing
+
+                        Won ->
+                            Just "You win!"
+
+                        Lost ->
+                            Just model.todaysWord
+                , messageTimeoutId = messageTimeoutId
+              }
+            , Cmd.none
+            )
+
+        else
+            ( { model
+                | message = Just ("\"" ++ model.currentGuess ++ "\" not in word list")
+                , messageTimeoutId = messageTimeoutId
+              }
+            , clearMessageAfter1Sec
+            )
+
+    else
+        ( model, Cmd.none )
 
 
 updateLetterStates : Model -> Dict Char LetterGuessResult
@@ -251,6 +269,9 @@ subscriptions model =
                             String.dropRight 1 model.currentGuess
                                 |> UpdateCurrentGuess
 
+                        Question ->
+                            GetHint
+
                         _ ->
                             NoOp
                 )
@@ -262,6 +283,7 @@ type Key
     = Character Char
     | Enter
     | Backspace
+    | Question
     | Other String
 
 
@@ -277,6 +299,9 @@ toKey string =
 
     else if string == "Backspace" then
         Backspace
+
+    else if string == "?" then
+        Question
 
     else
         case String.uncons string of
