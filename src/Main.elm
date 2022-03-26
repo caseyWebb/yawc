@@ -82,6 +82,7 @@ type Msg
     | SubmitCurrentGuess
     | ClearMessage Int
     | GetHint
+    | GotHint String
     | NoOp
 
 
@@ -110,8 +111,10 @@ update msg model =
                 ( model, Cmd.none )
 
         GetHint ->
-            Solver.nextGuess model.guessResults
-                |> updateCurrentGuess model
+            ( model, Solver.generateNextGuess GotHint model.todaysWord model.guessResults )
+
+        GotHint hint ->
+            updateCurrentGuess model hint
                 |> Tuple.first
                 |> submitCurrentGuess
 
