@@ -149,11 +149,11 @@ submitCurrentGuess model =
             model.guesses ++ [ model.currentGuess ]
 
         updatedGameState =
-            if List.length updatedGuessedWords == 6 then
-                Lost
-
-            else if model.currentGuess == model.todaysWord then
+            if model.currentGuess == model.todaysWord then
                 Won
+
+            else if List.length updatedGuessedWords == 6 then
+                Lost
 
             else
                 Playing
