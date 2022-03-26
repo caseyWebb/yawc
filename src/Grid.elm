@@ -2,6 +2,8 @@ module Grid exposing (view)
 
 import Colors as Colors
 import Css as Css
+import Css.Animations as Anim
+import Css.Transitions as Transitions
 import Dict as Dict exposing (Dict)
 import Html.Styled exposing (Html, a, div, text)
 import Html.Styled.Attributes exposing (css)
@@ -58,13 +60,13 @@ viewCurrentGuess word =
             String.toList word
     in
     viewRow <|
-        List.map (\l -> viewSquare (Pending l)) letters
-            ++ List.repeat (5 - List.length letters) (viewSquare Empty)
+        List.map (\l -> viewSquare 0 (Pending l)) letters
+            ++ List.repeat (5 - List.length letters) (viewSquare 0 Empty)
 
 
 viewBlankRows : Int -> Html msg
 viewBlankRows n =
-    viewColumn <| List.repeat n (viewRow (List.repeat 5 (viewSquare Empty)))
+    viewColumn <| List.repeat n (viewRow (List.repeat 5 (viewSquare 0 Empty)))
 
 
 viewGuessedGridSquare : Model -> Int -> Char -> Html msg
@@ -75,36 +77,101 @@ viewGuessedGridSquare model i letter =
                 case state of
                     LetterGuessResult.InWord knownPositions _ ->
                         if Set.member i knownPositions then
-                            viewSquare (CorrectPosition letter)
+                            viewSquare i (CorrectPosition letter)
 
                         else
-                            viewSquare (IncorrectPosition letter)
+                            viewSquare i (IncorrectPosition letter)
 
                     LetterGuessResult.NotInWord ->
-                        viewSquare (NotInWord letter)
+                        viewSquare i (NotInWord letter)
             )
-        |> Maybe.withDefault (viewSquare Empty)
+        |> Maybe.withDefault (viewSquare i Empty)
 
 
-viewSquare : GridSquare -> Html msg
-viewSquare square =
+viewSquare : Int -> GridSquare -> Html msg
+viewSquare i square =
     let
-        ( maybeBgColor, borderColor, char ) =
+        styleDelay =
+            250 * i |> toFloat
+
+        popInAnimation =
+            Css.batch
+                [ Css.animationDuration (Css.ms 100)
+                , Css.animationName <|
+                    Anim.keyframes
+                        [ ( 0
+                          , [ Anim.opacity (Css.int 0)
+                            , Anim.transform [ Css.scale 0.8 ]
+                            ]
+                          )
+                        , ( 40
+                          , [ Anim.opacity (Css.int 1)
+                            , Anim.transform [ Css.scale 1.1 ]
+                            ]
+                          )
+                        ]
+                ]
+
+        flipInAnimation =
+            Css.batch
+                [ Css.animationDuration (Css.ms 500)
+                , Css.animationDelay (Css.ms styleDelay)
+                , Css.property "animation-timing-function" "ease-in"
+                , Css.animationName <|
+                    Anim.keyframes
+                        [ ( 0
+                          , [ Anim.transform [ Css.rotateX (Css.deg 0) ]
+                            ]
+                          )
+                        , ( 50
+                          , [ Anim.transform [ Css.rotateX (Css.deg -90) ] ]
+                          )
+                        , ( 100
+                          , [ Anim.transform [ Css.rotateX (Css.deg 0) ] ]
+                          )
+                        ]
+                , Transitions.transition
+                    [ Transitions.backgroundColor2 0 (styleDelay + 250)
+                    , Transitions.borderColor2 0 (styleDelay + 250)
+                    ]
+                ]
+
+        { maybeBgColor, borderColor, char, maybeAnimation } =
             case square of
                 CorrectPosition a ->
-                    ( Just Colors.green, Colors.green, a )
+                    { maybeBgColor = Just Colors.green
+                    , borderColor = Colors.green
+                    , char = a
+                    , maybeAnimation = Just flipInAnimation
+                    }
 
                 IncorrectPosition a ->
-                    ( Just Colors.yellow, Colors.yellow, a )
+                    { maybeBgColor = Just Colors.yellow
+                    , borderColor = Colors.yellow
+                    , char = a
+                    , maybeAnimation = Just flipInAnimation
+                    }
 
                 NotInWord a ->
-                    ( Just Colors.gray4, Colors.gray4, a )
+                    { maybeBgColor = Just Colors.gray4
+                    , borderColor = Colors.gray4
+                    , char = a
+                    , maybeAnimation = Just flipInAnimation
+                    }
 
                 Empty ->
-                    ( Nothing, Colors.gray4, ' ' )
+                    { maybeBgColor = Nothing
+                    , borderColor = Colors.gray4
+                    , char = ' '
+                    , maybeAnimation = Nothing
+                    }
 
                 Pending a ->
-                    ( Nothing, Colors.gray3, a )
+                    { maybeBgColor = Nothing
+                    , borderColor = Colors.gray3
+                    , char = a
+                    , maybeAnimation = Just popInAnimation
+                    }
     in
     div
         [ css
@@ -118,7 +185,7 @@ viewSquare square =
              , Css.boxSizing Css.borderBox
              , Css.border3 (Css.px 2) Css.solid borderColor
              ]
-                ++ List.filterMap (Maybe.map Css.backgroundColor) [ maybeBgColor ]
+                ++ List.filterMap identity [ Maybe.map Css.backgroundColor maybeBgColor, maybeAnimation ]
             )
         ]
         [ text <| String.fromChar char ]
