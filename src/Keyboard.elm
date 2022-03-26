@@ -55,10 +55,10 @@ viewButton model toMsg letter =
 
         ( width, fontSize ) =
             if isBackspace || isEnter then
-                ( 60, 1.5 )
+                ( 65, 22 )
 
             else
-                ( 35, 1 )
+                ( 43, 14 )
     in
     button
         [ css
@@ -74,16 +74,16 @@ viewButton model toMsg letter =
                                     Colors.green
 
                             NotInWord ->
-                                Colors.gray
+                                Colors.gray4
                     )
-                |> Maybe.withDefault (Css.rgb 129 131 132)
+                |> Maybe.withDefault Colors.gray2
                 |> Css.backgroundColor
-            , Css.color <| Css.rgb 255 255 255
-            , Css.height (Css.px 50)
+            , Css.color Colors.white
+            , Css.height (Css.px 58)
             , Css.width (Css.px width)
             , Css.margin (Css.px 3)
-            , Css.fontSize (Css.rem fontSize)
-            , Css.lineHeight (Css.rem fontSize)
+            , Css.fontSize (Css.px fontSize)
+            , Css.lineHeight (Css.px fontSize)
             , Css.fontWeight Css.bold
             , Css.borderRadius (Css.px 4)
             , Css.borderStyle Css.none

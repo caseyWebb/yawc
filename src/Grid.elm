@@ -98,19 +98,19 @@ viewSquare square =
                     ( Just Colors.yellow, Colors.yellow, a )
 
                 NotInWord a ->
-                    ( Just Colors.gray, Colors.gray, a )
+                    ( Just Colors.gray4, Colors.gray4, a )
 
                 Empty ->
-                    ( Nothing, Colors.gray, ' ' )
+                    ( Nothing, Colors.gray4, ' ' )
 
                 Pending a ->
-                    ( Nothing, Colors.gray, a )
+                    ( Nothing, Colors.gray3, a )
     in
     div
         [ css
             ([ Css.width (Css.px 62)
              , Css.height (Css.px 62)
-             , Css.margin (Css.px 2)
+             , Css.margin (Css.px 2.5)
              , Css.fontWeight Css.bold
              , Css.fontSize (Css.px 32)
              , Css.lineHeight (Css.px 66)
