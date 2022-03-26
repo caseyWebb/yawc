@@ -5,11 +5,11 @@ import Css.Transitions as Transitions
 import Html.Styled exposing (Html, text)
 import Html.Styled.Attributes exposing (css)
 import Process
-import Task
+import Task exposing (Task)
 
 
 type Msg
-    = Show String (Maybe Int)
+    = Show String (Maybe Float)
     | Dismiss Int
 
 
@@ -20,9 +20,9 @@ type alias Model =
     }
 
 
-show : (Msg -> msg) -> String -> Maybe Int -> Cmd msg
-show toMsg message maybeAutoDismiss =
-    Task.perform (\_ -> Show message maybeAutoDismiss |> toMsg) (Task.succeed ())
+show : String -> Maybe Int -> Task msg Msg
+show message maybeAutoDismiss =
+    Task.succeed (Show message (Maybe.map toFloat maybeAutoDismiss))
 
 
 init : Model
@@ -33,8 +33,8 @@ init =
     }
 
 
-update : (Msg -> msg) -> Msg -> Model -> ( Model, Cmd msg )
-update toMsg msg model =
+update : Msg -> Model -> ( Model, Maybe (Task msg Msg) )
+update msg model =
     case msg of
         Show message maybeAutoDismiss ->
             let
@@ -42,15 +42,14 @@ update toMsg msg model =
                     model.messageId + 1
 
                 dismiss =
-                    case maybeAutoDismiss of
-                        Just ms ->
-                            ms
-                                |> toFloat
-                                |> Process.sleep
-                                |> Task.perform (\_ -> Dismiss messageId |> toMsg)
-
-                        Nothing ->
-                            Cmd.none
+                    Maybe.map
+                        (Process.sleep
+                            >> Task.andThen
+                                (\_ ->
+                                    Task.succeed (Dismiss messageId)
+                                )
+                        )
+                        maybeAutoDismiss
             in
             ( { model
                 | message = message
@@ -62,10 +61,10 @@ update toMsg msg model =
 
         Dismiss messageId ->
             if messageId == model.messageId then
-                ( { model | show = False }, Cmd.none )
+                ( { model | show = False }, Nothing )
 
             else
-                ( model, Cmd.none )
+                ( model, Nothing )
 
 
 view : Model -> Html msg

@@ -117,10 +117,14 @@ update msg model =
 
         ToastMsg toastMsg ->
             let
-                ( updatedToastModel, cmd ) =
-                    Toast.update ToastMsg toastMsg model.toastModel
+                ( updatedToastModel, maybeToastTask ) =
+                    Toast.update toastMsg model.toastModel
             in
-            ( { model | toastModel = updatedToastModel }, cmd )
+            ( { model | toastModel = updatedToastModel }
+            , maybeToastTask
+                |> Maybe.map (Task.perform ToastMsg)
+                |> Maybe.withDefault Cmd.none
+            )
 
         NoOp ->
             ( model, Cmd.none )
@@ -153,7 +157,7 @@ submitCurrentGuess model =
     in
     if model.gameState == Playing then
         if String.length model.currentGuess < 5 then
-            ( model, Toast.show ToastMsg "Not enough letters" (Just 1000) )
+            ( model, Toast.show "Not enough letters" (Just 1000) |> Task.perform ToastMsg )
 
         else if isValidWord model.currentGuess then
             ( { model
@@ -167,14 +171,14 @@ submitCurrentGuess model =
                     Cmd.none
 
                 Won ->
-                    Toast.show ToastMsg "You win!" Nothing
+                    Process.sleep 1500 |> Task.andThen (\_ -> Toast.show "You win!" Nothing) |> Task.perform ToastMsg
 
                 Lost ->
-                    Toast.show ToastMsg model.todaysWord Nothing
+                    Toast.show model.todaysWord Nothing |> Task.perform ToastMsg
             )
 
         else
-            ( model, Toast.show ToastMsg "Not in word list" (Just 1000) )
+            ( model, Toast.show "Not in word list" (Just 1000) |> Task.perform ToastMsg )
 
     else
         ( model, Cmd.none )
