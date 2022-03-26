@@ -5,7 +5,7 @@ import Browser.Events exposing (onKeyDown, onKeyPress)
 import Css as Css
 import Dict exposing (Dict)
 import Grid as Grid
-import Html.Styled exposing (Html, a, div, footer, h1, header, text, toUnstyled)
+import Html.Styled exposing (Html, a, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode as Decode
@@ -15,6 +15,7 @@ import Process
 import Set exposing (Set)
 import Solver
 import Task as Task
+import Toast
 import Words exposing (charIndiciesDict, getTodaysWord, isValidWord)
 
 
@@ -37,8 +38,7 @@ type alias Model =
     , currentGuess : String
     , guesses : List String
     , guessResults : Dict Char LetterGuessResult
-    , message : Maybe String
-    , messageTimeoutId : Int
+    , toastModel : Toast.Model
     }
 
 
@@ -69,9 +69,8 @@ init _ =
       , currentGuess = ""
       , guesses = []
       , guessResults = Dict.empty
-      , message = Nothing
-      , messageTimeoutId = 0
       , gameState = Playing
+      , toastModel = Toast.init
       }
     , Task.perform GotTodaysWord getTodaysWord
     )
@@ -85,9 +84,9 @@ type Msg
     = GotTodaysWord String
     | UpdateCurrentGuess String
     | SubmitCurrentGuess
-    | ClearMessage Int
     | GetHint
     | GotHint String
+    | ToastMsg Toast.Msg
     | NoOp
 
 
@@ -108,13 +107,6 @@ update msg model =
         SubmitCurrentGuess ->
             submitCurrentGuess model
 
-        ClearMessage messageTimeoutId ->
-            if messageTimeoutId == model.messageTimeoutId then
-                ( { model | message = Nothing }, Cmd.none )
-
-            else
-                ( model, Cmd.none )
-
         GetHint ->
             ( model, Solver.generateNextGuess GotHint model.todaysWord model.guessResults )
 
@@ -122,6 +114,13 @@ update msg model =
             updateCurrentGuess model hint
                 |> Tuple.first
                 |> submitCurrentGuess
+
+        ToastMsg toastMsg ->
+            let
+                ( updatedToastModel, cmd ) =
+                    Toast.update ToastMsg toastMsg model.toastModel
+            in
+            ( { model | toastModel = updatedToastModel }, cmd )
 
         NoOp ->
             ( model, Cmd.none )
@@ -139,12 +138,6 @@ updateCurrentGuess model updatedGuess =
 submitCurrentGuess : Model -> ( Model, Cmd Msg )
 submitCurrentGuess model =
     let
-        messageTimeoutId =
-            model.messageTimeoutId + 1
-
-        clearMessageAfter1Sec =
-            Process.sleep 1000 |> Task.perform (\_ -> ClearMessage messageTimeoutId)
-
         updatedGuessedWords =
             model.guesses ++ [ model.currentGuess ]
 
@@ -160,12 +153,7 @@ submitCurrentGuess model =
     in
     if model.gameState == Playing then
         if String.length model.currentGuess < 5 then
-            ( { model
-                | message = Just "Not enough letters"
-                , messageTimeoutId = messageTimeoutId
-              }
-            , clearMessageAfter1Sec
-            )
+            ( model, Toast.show ToastMsg "Not enough letters" (Just 1000) )
 
         else if isValidWord model.currentGuess then
             ( { model
@@ -173,28 +161,20 @@ submitCurrentGuess model =
                 , guesses = updatedGuessedWords
                 , guessResults = updateLetterStates model
                 , gameState = updatedGameState
-                , message =
-                    case updatedGameState of
-                        Playing ->
-                            Nothing
-
-                        Won ->
-                            Just "You win!"
-
-                        Lost ->
-                            Just model.todaysWord
-                , messageTimeoutId = messageTimeoutId
               }
-            , Cmd.none
+            , case updatedGameState of
+                Playing ->
+                    Cmd.none
+
+                Won ->
+                    Toast.show ToastMsg "You win!" Nothing
+
+                Lost ->
+                    Toast.show ToastMsg model.todaysWord Nothing
             )
 
         else
-            ( { model
-                | message = Just ("\"" ++ model.currentGuess ++ "\" not in word list")
-                , messageTimeoutId = messageTimeoutId
-              }
-            , clearMessageAfter1Sec
-            )
+            ( model, Toast.show ToastMsg "Not in word list" (Just 1000) )
 
     else
         ( model, Cmd.none )
@@ -367,7 +347,7 @@ viewBody model =
         ]
         [ Html.Styled.div
             [ css [ Css.minHeight (Css.px 60) ] ]
-            [ model.message |> Maybe.map viewMessage |> Maybe.withDefault (text "") ]
+            [ Toast.view model.toastModel ]
         , Grid.view
             { currentGuess = model.currentGuess
             , pastGuesses = model.guesses
@@ -388,21 +368,6 @@ viewBody model =
                         SubmitCurrentGuess
             )
         ]
-
-
-viewMessage : String -> Html Msg
-viewMessage message =
-    Html.Styled.div
-        [ css
-            [ Css.backgroundColor (Css.hex "fff")
-            , Css.color (Css.hex "000")
-            , Css.fontSize (Css.px 18)
-            , Css.fontWeight Css.bold
-            , Css.padding (Css.px 20)
-            , Css.borderRadius (Css.px 4)
-            ]
-        ]
-        [ text message ]
 
 
 viewFooter : Model -> Html Msg
