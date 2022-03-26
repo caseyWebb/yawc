@@ -253,6 +253,9 @@ subscriptions model =
                         Backspace ->
                             UpdateCurrentGuess <| backspace model.currentGuess
 
+                        Delete ->
+                            UpdateCurrentGuess ""
+
                         Question ->
                             GetHint
 
@@ -267,6 +270,7 @@ type Key
     = Character Char
     | Enter
     | Backspace
+    | Delete
     | Question
     | Other String
 
@@ -283,6 +287,9 @@ toKey string =
 
     else if string == "Backspace" then
         Backspace
+
+    else if string == "Delete" then
+        Delete
 
     else if string == "?" then
         Question
