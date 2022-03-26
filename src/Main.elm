@@ -266,8 +266,7 @@ subscriptions model =
                             SubmitCurrentGuess
 
                         Backspace ->
-                            String.dropRight 1 model.currentGuess
-                                |> UpdateCurrentGuess
+                            UpdateCurrentGuess <| backspace model.currentGuess
 
                         Question ->
                             GetHint
@@ -374,8 +373,14 @@ viewBody model =
             }
             (\msg ->
                 case msg of
-                    Keyboard.KeyClicked letter ->
+                    Keyboard.Letter letter ->
                         UpdateCurrentGuess <| String.append model.currentGuess (String.fromChar letter)
+
+                    Keyboard.Backspace ->
+                        UpdateCurrentGuess <| backspace model.currentGuess
+
+                    Keyboard.Enter ->
+                        SubmitCurrentGuess
             )
         ]
 
@@ -408,3 +413,12 @@ viewFooter _ =
         [ text "Made with <3 by "
         , a [ href "https://caseyWebb.xyz", css linkStyles ] [ text "Casey Webb" ]
         ]
+
+
+
+-- UTILS
+
+
+backspace : String -> String
+backspace =
+    String.dropRight 1

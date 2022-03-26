@@ -11,7 +11,9 @@ import Set as Set
 
 
 type Msg
-    = KeyClicked Char
+    = Letter Char
+    | Backspace
+    | Enter
 
 
 type alias Model =
@@ -27,7 +29,7 @@ view model clickMsg =
             , Css.flexDirection Css.column
             ]
         ]
-        ([ "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM" ] |> List.map (viewRow model clickMsg))
+        ([ "QWERTYUIOP", "ASDFGHJKL", "⇦ZXCVBNM⏎" ] |> List.map (viewRow model clickMsg))
 
 
 viewRow : Model -> (Msg -> msg) -> String -> Html msg
@@ -43,7 +45,21 @@ viewRow model clickMsg row =
 
 
 viewButton : Model -> (Msg -> msg) -> Char -> Html msg
-viewButton model mapMsg letter =
+viewButton model toMsg letter =
+    let
+        isBackspace =
+            letter == '⇦'
+
+        isEnter =
+            letter == '⏎'
+
+        ( width, fontSize ) =
+            if isBackspace || isEnter then
+                ( 60, 1.5 )
+
+            else
+                ( 35, 1 )
+    in
     button
         [ css
             [ Dict.get letter model.pastGuessResults
@@ -64,13 +80,26 @@ viewButton model mapMsg letter =
                 |> Css.backgroundColor
             , Css.color <| Css.rgb 255 255 255
             , Css.height (Css.px 50)
-            , Css.width (Css.px 35)
+            , Css.width (Css.px width)
             , Css.margin (Css.px 3)
+            , Css.fontSize (Css.rem fontSize)
+            , Css.lineHeight (Css.rem fontSize)
             , Css.fontWeight Css.bold
             , Css.borderRadius (Css.px 4)
             , Css.borderStyle Css.none
             , Css.cursor Css.pointer
             ]
-        , onClick (KeyClicked letter |> mapMsg)
+        , onClick
+            ((if isBackspace then
+                Backspace
+
+              else if isEnter then
+                Enter
+
+              else
+                Letter letter
+             )
+                |> toMsg
+            )
         ]
         [ text <| String.fromChar letter ]
