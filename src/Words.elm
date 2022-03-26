@@ -12,13 +12,13 @@ getTodaysWord =
     Time.now
         |> Task.map
             (Time.posixToMillis
-                >> (//) (24 * 60 * 60 * 1000)
+                -- Uncomment for daily words
+                -- >> (//) (24 * 60 * 60 * 1000)
                 >> Random.initialSeed
                 >> Random.step (randomWordGenerator commonWords)
                 >> Tuple.first
                 >> String.toUpper
             )
-
 
 isValidWord : String -> Bool
 isValidWord word =
