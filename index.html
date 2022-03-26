@@ -5429,11 +5429,12 @@ var $author$project$Main$UpdateCurrentGuess = function (a) {
 	return {$: 1, a: a};
 };
 var $elm$core$String$append = _String_append;
-var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$String$dropRight = F2(
 	function (n, string) {
 		return (n < 1) ? string : A3($elm$core$String$slice, 0, -n, string);
 	});
+var $author$project$Main$backspace = $elm$core$String$dropRight(1);
+var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$String$cons = _String_cons;
 var $elm$core$String$fromChar = function (_char) {
 	return A2($elm$core$String$cons, _char, '');
@@ -5904,7 +5905,7 @@ var $author$project$Main$subscriptions = function (model) {
 								return $author$project$Main$SubmitCurrentGuess;
 							case 2:
 								return $author$project$Main$UpdateCurrentGuess(
-									A2($elm$core$String$dropRight, 1, model.bn));
+									$author$project$Main$backspace(model.bn));
 							case 3:
 								return $author$project$Main$GetHint;
 							default:
@@ -7560,7 +7561,7 @@ var $author$project$Main$submitCurrentGuess = function (model) {
 		model.ay,
 		_List_fromArray(
 			[model.bn]));
-	var updatedGameState = ($elm$core$List$length(updatedGuessedWords) === 6) ? 2 : (_Utils_eq(model.bn, model.ao) ? 1 : 0);
+	var updatedGameState = _Utils_eq(model.bn, model.ao) ? 1 : (($elm$core$List$length(updatedGuessedWords) === 6) ? 2 : 0);
 	var messageTimeoutId = model.Q + 1;
 	var clearMessageAfter1Sec = A2(
 		$elm$core$Task$perform,
@@ -9365,302 +9366,6 @@ var $rtfeldman$elm_css$Css$fontWeight = function (_v0) {
 	var value = _v0.z;
 	return A2($rtfeldman$elm_css$Css$property, 'font-weight', value);
 };
-var $author$project$Colors$gray = A3($rtfeldman$elm_css$Css$rgb, 58, 58, 60);
-var $author$project$Colors$green = A3($rtfeldman$elm_css$Css$rgb, 83, 141, 78);
-var $rtfeldman$elm_css$Css$lineHeight = $rtfeldman$elm_css$Css$prop1('line-height');
-var $rtfeldman$elm_css$Css$margin = $rtfeldman$elm_css$Css$prop1('margin');
-var $rtfeldman$elm_css$Css$solid = {n: 0, U: 0, z: 'solid'};
-var $rtfeldman$elm_css$Css$textAlign = function (fn) {
-	return A3(
-		$rtfeldman$elm_css$Css$Internal$getOverloadedProperty,
-		'textAlign',
-		'text-align',
-		fn($rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
-};
-var $rtfeldman$elm_css$Css$width = $rtfeldman$elm_css$Css$prop1('width');
-var $author$project$Colors$yellow = A3($rtfeldman$elm_css$Css$rgb, 181, 159, 59);
-var $author$project$Grid$viewSquare = function (square) {
-	var _v0 = function () {
-		switch (square.$) {
-			case 0:
-				var a = square.a;
-				return _Utils_Tuple3(
-					$elm$core$Maybe$Just($author$project$Colors$green),
-					$author$project$Colors$green,
-					a);
-			case 1:
-				var a = square.a;
-				return _Utils_Tuple3(
-					$elm$core$Maybe$Just($author$project$Colors$yellow),
-					$author$project$Colors$yellow,
-					a);
-			case 2:
-				var a = square.a;
-				return _Utils_Tuple3(
-					$elm$core$Maybe$Just($author$project$Colors$gray),
-					$author$project$Colors$gray,
-					a);
-			case 4:
-				return _Utils_Tuple3($elm$core$Maybe$Nothing, $author$project$Colors$gray, ' ');
-			default:
-				var a = square.a;
-				return _Utils_Tuple3($elm$core$Maybe$Nothing, $author$project$Colors$gray, a);
-		}
-	}();
-	var maybeBgColor = _v0.a;
-	var borderColor = _v0.b;
-	var _char = _v0.c;
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$div,
-		_List_fromArray(
-			[
-				$rtfeldman$elm_css$Html$Styled$Attributes$css(
-				_Utils_ap(
-					_List_fromArray(
-						[
-							$rtfeldman$elm_css$Css$width(
-							$rtfeldman$elm_css$Css$px(62)),
-							$rtfeldman$elm_css$Css$height(
-							$rtfeldman$elm_css$Css$px(62)),
-							$rtfeldman$elm_css$Css$margin(
-							$rtfeldman$elm_css$Css$px(2)),
-							$rtfeldman$elm_css$Css$fontWeight($rtfeldman$elm_css$Css$bold),
-							$rtfeldman$elm_css$Css$fontSize(
-							$rtfeldman$elm_css$Css$px(32)),
-							$rtfeldman$elm_css$Css$lineHeight(
-							$rtfeldman$elm_css$Css$px(66)),
-							$rtfeldman$elm_css$Css$textAlign($rtfeldman$elm_css$Css$center),
-							$rtfeldman$elm_css$Css$boxSizing($rtfeldman$elm_css$Css$borderBox),
-							A3(
-							$rtfeldman$elm_css$Css$border3,
-							$rtfeldman$elm_css$Css$px(2),
-							$rtfeldman$elm_css$Css$solid,
-							borderColor)
-						]),
-					A2(
-						$elm$core$List$filterMap,
-						$elm$core$Maybe$map($rtfeldman$elm_css$Css$backgroundColor),
-						_List_fromArray(
-							[maybeBgColor]))))
-			]),
-		_List_fromArray(
-			[
-				$rtfeldman$elm_css$Html$Styled$text(
-				$elm$core$String$fromChar(_char))
-			]));
-};
-var $author$project$Grid$viewBlankRows = function (n) {
-	return $author$project$Grid$viewColumn(
-		A2(
-			$elm$core$List$repeat,
-			n,
-			$author$project$Grid$viewRow(
-				A2(
-					$elm$core$List$repeat,
-					5,
-					$author$project$Grid$viewSquare($author$project$Grid$Empty)))));
-};
-var $author$project$Grid$Pending = function (a) {
-	return {$: 3, a: a};
-};
-var $author$project$Grid$viewCurrentGuess = function (word) {
-	var letters = $elm$core$String$toList(word);
-	return $author$project$Grid$viewRow(
-		_Utils_ap(
-			A2(
-				$elm$core$List$map,
-				function (l) {
-					return $author$project$Grid$viewSquare(
-						$author$project$Grid$Pending(l));
-				},
-				letters),
-			A2(
-				$elm$core$List$repeat,
-				5 - $elm$core$List$length(letters),
-				$author$project$Grid$viewSquare($author$project$Grid$Empty))));
-};
-var $author$project$Grid$CorrectPosition = function (a) {
-	return {$: 0, a: a};
-};
-var $author$project$Grid$IncorrectPosition = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$Grid$NotInWord = function (a) {
-	return {$: 2, a: a};
-};
-var $author$project$Grid$viewGuessedGridSquare = F3(
-	function (model, i, letter) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			$author$project$Grid$viewSquare($author$project$Grid$Empty),
-			A2(
-				$elm$core$Maybe$map,
-				function (state) {
-					if (!state.$) {
-						var knownPositions = state.a;
-						return A2($elm$core$Set$member, i, knownPositions) ? $author$project$Grid$viewSquare(
-							$author$project$Grid$CorrectPosition(letter)) : $author$project$Grid$viewSquare(
-							$author$project$Grid$IncorrectPosition(letter));
-					} else {
-						return $author$project$Grid$viewSquare(
-							$author$project$Grid$NotInWord(letter));
-					}
-				},
-				A2($elm$core$Dict$get, letter, model.bD)));
-	});
-var $author$project$Grid$viewGuessedWords = function (model) {
-	return A2(
-		$elm$core$List$map,
-		A2(
-			$elm$core$Basics$composeL,
-			A2(
-				$elm$core$Basics$composeL,
-				$author$project$Grid$viewRow,
-				$elm$core$List$indexedMap(
-					$author$project$Grid$viewGuessedGridSquare(model))),
-			$elm$core$String$toList),
-		model.aT);
-};
-var $author$project$Grid$view = function (model) {
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$div,
-		_List_fromArray(
-			[
-				$rtfeldman$elm_css$Html$Styled$Attributes$css(
-				_List_fromArray(
-					[
-						$rtfeldman$elm_css$Css$displayFlex,
-						$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column),
-						$rtfeldman$elm_css$Css$justifyContent($rtfeldman$elm_css$Css$spaceBetween),
-						$rtfeldman$elm_css$Css$alignItems($rtfeldman$elm_css$Css$center)
-					]))
-			]),
-		_Utils_ap(
-			$author$project$Grid$viewGuessedWords(model),
-			($elm$core$List$length(model.aT) === 6) ? _List_Nil : _List_fromArray(
-				[
-					$author$project$Grid$viewCurrentGuess(model.bn),
-					$author$project$Grid$viewBlankRows(
-					5 - $elm$core$List$length(model.aT))
-				])));
-};
-var $author$project$Keyboard$KeyClicked = $elm$core$Basics$identity;
-var $rtfeldman$elm_css$Css$borderRadius = $rtfeldman$elm_css$Css$prop1('border-radius');
-var $rtfeldman$elm_css$Css$borderStyle = $rtfeldman$elm_css$Css$prop1('border-style');
-var $rtfeldman$elm_css$Html$Styled$button = $rtfeldman$elm_css$Html$Styled$node('button');
-var $rtfeldman$elm_css$Css$cursor = $rtfeldman$elm_css$Css$prop1('cursor');
-var $rtfeldman$elm_css$Css$none = {X: 0, bi: 0, n: 0, a: 0, f: 0, b9: 0, bx: 0, a1: 0, ah: 0, N: 0, x: 0, c: 0, b: 0, a3: 0, aS: 0, ci: 0, u: 0, aU: 0, ck: 0, al: 0, V: 0, q: 0, e: 0, cp: 0, z: 'none'};
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $rtfeldman$elm_css$VirtualDom$Styled$on = F2(
-	function (eventName, handler) {
-		return A3(
-			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
-			A2($elm$virtual_dom$VirtualDom$on, eventName, handler),
-			false,
-			'');
-	});
-var $rtfeldman$elm_css$Html$Styled$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $rtfeldman$elm_css$Html$Styled$Events$onClick = function (msg) {
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $rtfeldman$elm_css$Css$pointer = {a: 0, z: 'pointer'};
-var $author$project$Keyboard$viewButton = F3(
-	function (model, mapMsg, letter) {
-		return A2(
-			$rtfeldman$elm_css$Html$Styled$button,
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$Attributes$css(
-					_List_fromArray(
-						[
-							$rtfeldman$elm_css$Css$backgroundColor(
-							A2(
-								$elm$core$Maybe$withDefault,
-								A3($rtfeldman$elm_css$Css$rgb, 129, 131, 132),
-								A2(
-									$elm$core$Maybe$map,
-									function (state) {
-										if (!state.$) {
-											var knownPositions = state.a;
-											return $elm$core$Set$isEmpty(knownPositions) ? $author$project$Colors$yellow : $author$project$Colors$green;
-										} else {
-											return $author$project$Colors$gray;
-										}
-									},
-									A2($elm$core$Dict$get, letter, model.bD)))),
-							$rtfeldman$elm_css$Css$color(
-							A3($rtfeldman$elm_css$Css$rgb, 255, 255, 255)),
-							$rtfeldman$elm_css$Css$height(
-							$rtfeldman$elm_css$Css$px(50)),
-							$rtfeldman$elm_css$Css$width(
-							$rtfeldman$elm_css$Css$px(35)),
-							$rtfeldman$elm_css$Css$margin(
-							$rtfeldman$elm_css$Css$px(3)),
-							$rtfeldman$elm_css$Css$fontWeight($rtfeldman$elm_css$Css$bold),
-							$rtfeldman$elm_css$Css$borderRadius(
-							$rtfeldman$elm_css$Css$px(4)),
-							$rtfeldman$elm_css$Css$borderStyle($rtfeldman$elm_css$Css$none),
-							$rtfeldman$elm_css$Css$cursor($rtfeldman$elm_css$Css$pointer)
-						])),
-					$rtfeldman$elm_css$Html$Styled$Events$onClick(
-					mapMsg(letter))
-				]),
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$text(
-					$elm$core$String$fromChar(letter))
-				]));
-	});
-var $author$project$Keyboard$viewRow = F3(
-	function (model, clickMsg, row) {
-		return A2(
-			$rtfeldman$elm_css$Html$Styled$div,
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$Attributes$css(
-					_List_fromArray(
-						[
-							$rtfeldman$elm_css$Css$displayFlex,
-							$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$row),
-							$rtfeldman$elm_css$Css$justifyContent($rtfeldman$elm_css$Css$center)
-						]))
-				]),
-			A2(
-				$elm$core$List$map,
-				A2($author$project$Keyboard$viewButton, model, clickMsg),
-				$elm$core$String$toList(row)));
-	});
-var $author$project$Keyboard$view = F2(
-	function (model, clickMsg) {
-		return A2(
-			$rtfeldman$elm_css$Html$Styled$div,
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$Attributes$css(
-					_List_fromArray(
-						[
-							$rtfeldman$elm_css$Css$displayFlex,
-							$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column)
-						]))
-				]),
-			A2(
-				$elm$core$List$map,
-				A2($author$project$Keyboard$viewRow, model, clickMsg),
-				_List_fromArray(
-					['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'])));
-	});
 var $rtfeldman$elm_css$Css$withPrecedingHash = function (str) {
 	return A2($elm$core$String$startsWith, '#', str) ? str : A2($elm$core$String$cons, '#', str);
 };
@@ -10024,6 +9729,318 @@ var $rtfeldman$elm_css$Css$hex = function (str) {
 	}
 	return $rtfeldman$elm_css$Css$erroneousHex(str);
 };
+var $author$project$Colors$gray3 = $rtfeldman$elm_css$Css$hex('565758');
+var $author$project$Colors$gray4 = $rtfeldman$elm_css$Css$hex('3a3a3c');
+var $author$project$Colors$green = $rtfeldman$elm_css$Css$hex('538d4e');
+var $rtfeldman$elm_css$Css$lineHeight = $rtfeldman$elm_css$Css$prop1('line-height');
+var $rtfeldman$elm_css$Css$margin = $rtfeldman$elm_css$Css$prop1('margin');
+var $rtfeldman$elm_css$Css$solid = {n: 0, U: 0, z: 'solid'};
+var $rtfeldman$elm_css$Css$textAlign = function (fn) {
+	return A3(
+		$rtfeldman$elm_css$Css$Internal$getOverloadedProperty,
+		'textAlign',
+		'text-align',
+		fn($rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
+};
+var $rtfeldman$elm_css$Css$width = $rtfeldman$elm_css$Css$prop1('width');
+var $author$project$Colors$yellow = $rtfeldman$elm_css$Css$hex('b59f3b');
+var $author$project$Grid$viewSquare = function (square) {
+	var _v0 = function () {
+		switch (square.$) {
+			case 0:
+				var a = square.a;
+				return _Utils_Tuple3(
+					$elm$core$Maybe$Just($author$project$Colors$green),
+					$author$project$Colors$green,
+					a);
+			case 1:
+				var a = square.a;
+				return _Utils_Tuple3(
+					$elm$core$Maybe$Just($author$project$Colors$yellow),
+					$author$project$Colors$yellow,
+					a);
+			case 2:
+				var a = square.a;
+				return _Utils_Tuple3(
+					$elm$core$Maybe$Just($author$project$Colors$gray4),
+					$author$project$Colors$gray4,
+					a);
+			case 4:
+				return _Utils_Tuple3($elm$core$Maybe$Nothing, $author$project$Colors$gray4, ' ');
+			default:
+				var a = square.a;
+				return _Utils_Tuple3($elm$core$Maybe$Nothing, $author$project$Colors$gray3, a);
+		}
+	}();
+	var maybeBgColor = _v0.a;
+	var borderColor = _v0.b;
+	var _char = _v0.c;
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$div,
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$Attributes$css(
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$rtfeldman$elm_css$Css$width(
+							$rtfeldman$elm_css$Css$px(62)),
+							$rtfeldman$elm_css$Css$height(
+							$rtfeldman$elm_css$Css$px(62)),
+							$rtfeldman$elm_css$Css$margin(
+							$rtfeldman$elm_css$Css$px(2.5)),
+							$rtfeldman$elm_css$Css$fontWeight($rtfeldman$elm_css$Css$bold),
+							$rtfeldman$elm_css$Css$fontSize(
+							$rtfeldman$elm_css$Css$px(32)),
+							$rtfeldman$elm_css$Css$lineHeight(
+							$rtfeldman$elm_css$Css$px(66)),
+							$rtfeldman$elm_css$Css$textAlign($rtfeldman$elm_css$Css$center),
+							$rtfeldman$elm_css$Css$boxSizing($rtfeldman$elm_css$Css$borderBox),
+							A3(
+							$rtfeldman$elm_css$Css$border3,
+							$rtfeldman$elm_css$Css$px(2),
+							$rtfeldman$elm_css$Css$solid,
+							borderColor)
+						]),
+					A2(
+						$elm$core$List$filterMap,
+						$elm$core$Maybe$map($rtfeldman$elm_css$Css$backgroundColor),
+						_List_fromArray(
+							[maybeBgColor]))))
+			]),
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$text(
+				$elm$core$String$fromChar(_char))
+			]));
+};
+var $author$project$Grid$viewBlankRows = function (n) {
+	return $author$project$Grid$viewColumn(
+		A2(
+			$elm$core$List$repeat,
+			n,
+			$author$project$Grid$viewRow(
+				A2(
+					$elm$core$List$repeat,
+					5,
+					$author$project$Grid$viewSquare($author$project$Grid$Empty)))));
+};
+var $author$project$Grid$Pending = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$Grid$viewCurrentGuess = function (word) {
+	var letters = $elm$core$String$toList(word);
+	return $author$project$Grid$viewRow(
+		_Utils_ap(
+			A2(
+				$elm$core$List$map,
+				function (l) {
+					return $author$project$Grid$viewSquare(
+						$author$project$Grid$Pending(l));
+				},
+				letters),
+			A2(
+				$elm$core$List$repeat,
+				5 - $elm$core$List$length(letters),
+				$author$project$Grid$viewSquare($author$project$Grid$Empty))));
+};
+var $author$project$Grid$CorrectPosition = function (a) {
+	return {$: 0, a: a};
+};
+var $author$project$Grid$IncorrectPosition = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$Grid$NotInWord = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$Grid$viewGuessedGridSquare = F3(
+	function (model, i, letter) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			$author$project$Grid$viewSquare($author$project$Grid$Empty),
+			A2(
+				$elm$core$Maybe$map,
+				function (state) {
+					if (!state.$) {
+						var knownPositions = state.a;
+						return A2($elm$core$Set$member, i, knownPositions) ? $author$project$Grid$viewSquare(
+							$author$project$Grid$CorrectPosition(letter)) : $author$project$Grid$viewSquare(
+							$author$project$Grid$IncorrectPosition(letter));
+					} else {
+						return $author$project$Grid$viewSquare(
+							$author$project$Grid$NotInWord(letter));
+					}
+				},
+				A2($elm$core$Dict$get, letter, model.bD)));
+	});
+var $author$project$Grid$viewGuessedWords = function (model) {
+	return A2(
+		$elm$core$List$map,
+		A2(
+			$elm$core$Basics$composeL,
+			A2(
+				$elm$core$Basics$composeL,
+				$author$project$Grid$viewRow,
+				$elm$core$List$indexedMap(
+					$author$project$Grid$viewGuessedGridSquare(model))),
+			$elm$core$String$toList),
+		model.aT);
+};
+var $author$project$Grid$view = function (model) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$div,
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$Attributes$css(
+				_List_fromArray(
+					[
+						$rtfeldman$elm_css$Css$displayFlex,
+						$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column),
+						$rtfeldman$elm_css$Css$justifyContent($rtfeldman$elm_css$Css$spaceBetween),
+						$rtfeldman$elm_css$Css$alignItems($rtfeldman$elm_css$Css$center)
+					]))
+			]),
+		_Utils_ap(
+			$author$project$Grid$viewGuessedWords(model),
+			($elm$core$List$length(model.aT) === 6) ? _List_Nil : _List_fromArray(
+				[
+					$author$project$Grid$viewCurrentGuess(model.bn),
+					$author$project$Grid$viewBlankRows(
+					5 - $elm$core$List$length(model.aT))
+				])));
+};
+var $author$project$Keyboard$Backspace = {$: 1};
+var $author$project$Keyboard$Enter = {$: 2};
+var $author$project$Keyboard$Letter = function (a) {
+	return {$: 0, a: a};
+};
+var $rtfeldman$elm_css$Css$borderRadius = $rtfeldman$elm_css$Css$prop1('border-radius');
+var $rtfeldman$elm_css$Css$borderStyle = $rtfeldman$elm_css$Css$prop1('border-style');
+var $rtfeldman$elm_css$Html$Styled$button = $rtfeldman$elm_css$Html$Styled$node('button');
+var $rtfeldman$elm_css$Css$cursor = $rtfeldman$elm_css$Css$prop1('cursor');
+var $author$project$Colors$gray2 = $rtfeldman$elm_css$Css$hex('818384');
+var $rtfeldman$elm_css$Css$none = {X: 0, bi: 0, n: 0, a: 0, f: 0, b9: 0, bx: 0, a1: 0, ah: 0, N: 0, x: 0, c: 0, b: 0, a3: 0, aS: 0, ci: 0, u: 0, aU: 0, ck: 0, al: 0, V: 0, q: 0, e: 0, cp: 0, z: 'none'};
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $rtfeldman$elm_css$VirtualDom$Styled$on = F2(
+	function (eventName, handler) {
+		return A3(
+			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
+			A2($elm$virtual_dom$VirtualDom$on, eventName, handler),
+			false,
+			'');
+	});
+var $rtfeldman$elm_css$Html$Styled$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$rtfeldman$elm_css$VirtualDom$Styled$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $rtfeldman$elm_css$Html$Styled$Events$onClick = function (msg) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $rtfeldman$elm_css$Css$pointer = {a: 0, z: 'pointer'};
+var $author$project$Colors$white = A3($rtfeldman$elm_css$Css$rgb, 255, 255, 255);
+var $author$project$Keyboard$viewButton = F3(
+	function (model, toMsg, letter) {
+		var isEnter = letter === '⏎';
+		var isBackspace = letter === '⇦';
+		var _v0 = (isBackspace || isEnter) ? _Utils_Tuple2(65, 22) : _Utils_Tuple2(43, 14);
+		var width = _v0.a;
+		var fontSize = _v0.b;
+		return A2(
+			$rtfeldman$elm_css$Html$Styled$button,
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$Attributes$css(
+					_List_fromArray(
+						[
+							$rtfeldman$elm_css$Css$backgroundColor(
+							A2(
+								$elm$core$Maybe$withDefault,
+								$author$project$Colors$gray2,
+								A2(
+									$elm$core$Maybe$map,
+									function (state) {
+										if (!state.$) {
+											var knownPositions = state.a;
+											return $elm$core$Set$isEmpty(knownPositions) ? $author$project$Colors$yellow : $author$project$Colors$green;
+										} else {
+											return $author$project$Colors$gray4;
+										}
+									},
+									A2($elm$core$Dict$get, letter, model.bD)))),
+							$rtfeldman$elm_css$Css$color($author$project$Colors$white),
+							$rtfeldman$elm_css$Css$height(
+							$rtfeldman$elm_css$Css$px(58)),
+							$rtfeldman$elm_css$Css$width(
+							$rtfeldman$elm_css$Css$px(width)),
+							$rtfeldman$elm_css$Css$margin(
+							$rtfeldman$elm_css$Css$px(3)),
+							$rtfeldman$elm_css$Css$fontSize(
+							$rtfeldman$elm_css$Css$px(fontSize)),
+							$rtfeldman$elm_css$Css$lineHeight(
+							$rtfeldman$elm_css$Css$px(fontSize)),
+							$rtfeldman$elm_css$Css$fontWeight($rtfeldman$elm_css$Css$bold),
+							$rtfeldman$elm_css$Css$borderRadius(
+							$rtfeldman$elm_css$Css$px(4)),
+							$rtfeldman$elm_css$Css$borderStyle($rtfeldman$elm_css$Css$none),
+							$rtfeldman$elm_css$Css$cursor($rtfeldman$elm_css$Css$pointer)
+						])),
+					$rtfeldman$elm_css$Html$Styled$Events$onClick(
+					toMsg(
+						isBackspace ? $author$project$Keyboard$Backspace : (isEnter ? $author$project$Keyboard$Enter : $author$project$Keyboard$Letter(letter))))
+				]),
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$text(
+					$elm$core$String$fromChar(letter))
+				]));
+	});
+var $author$project$Keyboard$viewRow = F3(
+	function (model, clickMsg, row) {
+		return A2(
+			$rtfeldman$elm_css$Html$Styled$div,
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$Attributes$css(
+					_List_fromArray(
+						[
+							$rtfeldman$elm_css$Css$displayFlex,
+							$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$row),
+							$rtfeldman$elm_css$Css$justifyContent($rtfeldman$elm_css$Css$center)
+						]))
+				]),
+			A2(
+				$elm$core$List$map,
+				A2($author$project$Keyboard$viewButton, model, clickMsg),
+				$elm$core$String$toList(row)));
+	});
+var $author$project$Keyboard$view = F2(
+	function (model, clickMsg) {
+		return A2(
+			$rtfeldman$elm_css$Html$Styled$div,
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$Attributes$css(
+					_List_fromArray(
+						[
+							$rtfeldman$elm_css$Css$displayFlex,
+							$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column)
+						]))
+				]),
+			A2(
+				$elm$core$List$map,
+				A2($author$project$Keyboard$viewRow, model, clickMsg),
+				_List_fromArray(
+					['QWERTYUIOP', 'ASDFGHJKL', '⇦ZXCVBNM⏎'])));
+	});
 var $rtfeldman$elm_css$Css$padding = $rtfeldman$elm_css$Css$prop1('padding');
 var $author$project$Main$viewMessage = function (message) {
 	return A2(
@@ -10093,16 +10110,28 @@ var $author$project$Main$viewBody = function (model) {
 				$author$project$Keyboard$view,
 				{bD: model.M},
 				function (msg) {
-					var letter = msg;
-					return $author$project$Main$UpdateCurrentGuess(
-						A2(
-							$elm$core$String$append,
-							model.bn,
-							$elm$core$String$fromChar(letter)));
+					switch (msg.$) {
+						case 0:
+							var letter = msg.a;
+							return $author$project$Main$UpdateCurrentGuess(
+								A2(
+									$elm$core$String$append,
+									model.bn,
+									$elm$core$String$fromChar(letter)));
+						case 1:
+							return $author$project$Main$UpdateCurrentGuess(
+								$author$project$Main$backspace(model.bn));
+						default:
+							return $author$project$Main$SubmitCurrentGuess;
+					}
 				})
 			]));
 };
 var $rtfeldman$elm_css$Html$Styled$a = $rtfeldman$elm_css$Html$Styled$node('a');
+var $rtfeldman$elm_css$Css$block = {f: 0, z: 'block'};
+var $rtfeldman$elm_css$Css$bottom = $rtfeldman$elm_css$Css$prop1('bottom');
+var $rtfeldman$elm_css$Css$display = $rtfeldman$elm_css$Css$prop1('display');
+var $rtfeldman$elm_css$Css$fixed = {at: 0, aC: 0, aX: 0, z: 'fixed'};
 var $rtfeldman$elm_css$Html$Styled$footer = $rtfeldman$elm_css$Html$Styled$node('footer');
 var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
 	function (key, value) {
@@ -10122,6 +10151,12 @@ var $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty = F2(
 var $rtfeldman$elm_css$Html$Styled$Attributes$href = function (url) {
 	return A2($rtfeldman$elm_css$Html$Styled$Attributes$stringProperty, 'href', url);
 };
+var $rtfeldman$elm_css$Css$paddingTop = $rtfeldman$elm_css$Css$prop1('padding-top');
+var $rtfeldman$elm_css$Css$position = $rtfeldman$elm_css$Css$prop1('position');
+var $rtfeldman$elm_css$Css$RemUnits = 0;
+var $rtfeldman$elm_css$Css$rem = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'rem');
+var $rtfeldman$elm_css$Css$right = $rtfeldman$elm_css$Css$prop1('right');
+var $author$project$Main$sourceCodeUrl = 'https://github.com/caseyWebb/YAWC';
 var $rtfeldman$elm_css$Css$textDecoration = $rtfeldman$elm_css$Css$prop1('text-decoration');
 var $author$project$Main$viewFooter = function (_v0) {
 	var linkStyles = _List_fromArray(
@@ -10141,22 +10176,76 @@ var $author$project$Main$viewFooter = function (_v0) {
 						$rtfeldman$elm_css$Css$color(
 						$rtfeldman$elm_css$Css$hex('272729')),
 						$rtfeldman$elm_css$Css$padding(
-						$rtfeldman$elm_css$Css$px(5))
+						$rtfeldman$elm_css$Css$rem(1)),
+						$rtfeldman$elm_css$Css$fontSize(
+						$rtfeldman$elm_css$Css$rem(1.2))
 					]))
 			]),
 		_List_fromArray(
 			[
-				$rtfeldman$elm_css$Html$Styled$text('Made with <3 by '),
 				A2(
-				$rtfeldman$elm_css$Html$Styled$a,
+				$rtfeldman$elm_css$Html$Styled$div,
 				_List_fromArray(
 					[
-						$rtfeldman$elm_css$Html$Styled$Attributes$href('https://caseyWebb.xyz'),
-						$rtfeldman$elm_css$Html$Styled$Attributes$css(linkStyles)
+						$rtfeldman$elm_css$Html$Styled$Attributes$css(
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Css$textAlign($rtfeldman$elm_css$Css$center)
+							]))
 					]),
 				_List_fromArray(
 					[
-						$rtfeldman$elm_css$Html$Styled$text('Casey Webb')
+						$rtfeldman$elm_css$Html$Styled$text('Made with <3 by '),
+						A2(
+						$rtfeldman$elm_css$Html$Styled$a,
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Html$Styled$Attributes$href('https://caseyWebb.xyz'),
+								$rtfeldman$elm_css$Html$Styled$Attributes$css(linkStyles)
+							]),
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Html$Styled$text('Casey Webb')
+							])),
+						A2(
+						$rtfeldman$elm_css$Html$Styled$a,
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Html$Styled$Attributes$href($author$project$Main$sourceCodeUrl),
+								$rtfeldman$elm_css$Html$Styled$Attributes$css(
+								_Utils_ap(
+									linkStyles,
+									_List_fromArray(
+										[
+											$rtfeldman$elm_css$Css$paddingTop(
+											$rtfeldman$elm_css$Css$rem(0.5)),
+											$rtfeldman$elm_css$Css$display($rtfeldman$elm_css$Css$block)
+										])))
+							]),
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Html$Styled$text('Source Code')
+							]))
+					])),
+				A2(
+				$rtfeldman$elm_css$Html$Styled$div,
+				_List_fromArray(
+					[
+						$rtfeldman$elm_css$Html$Styled$Attributes$css(
+						_List_fromArray(
+							[
+								$rtfeldman$elm_css$Css$position($rtfeldman$elm_css$Css$fixed),
+								$rtfeldman$elm_css$Css$bottom(
+								$rtfeldman$elm_css$Css$rem(1)),
+								$rtfeldman$elm_css$Css$right(
+								$rtfeldman$elm_css$Css$rem(1)),
+								$rtfeldman$elm_css$Css$cursor($rtfeldman$elm_css$Css$pointer)
+							])),
+						$rtfeldman$elm_css$Html$Styled$Events$onClick($author$project$Main$GetHint)
+					]),
+				_List_fromArray(
+					[
+						$rtfeldman$elm_css$Html$Styled$text('Press ? or click here for a hint')
 					]))
 			]));
 };
@@ -10172,7 +10261,7 @@ var $author$project$Main$viewHeader = function (_v0) {
 				$rtfeldman$elm_css$Html$Styled$a,
 				_List_fromArray(
 					[
-						$rtfeldman$elm_css$Html$Styled$Attributes$href('https://github.com/caseyWebb/YAWC'),
+						$rtfeldman$elm_css$Html$Styled$Attributes$href($author$project$Main$sourceCodeUrl),
 						$rtfeldman$elm_css$Html$Styled$Attributes$css(
 						_List_fromArray(
 							[
