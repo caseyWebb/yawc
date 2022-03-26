@@ -5,7 +5,7 @@ import Browser.Events exposing (onKeyDown, onKeyPress)
 import Css as Css
 import Dict exposing (Dict)
 import Grid as Grid
-import Html.Styled exposing (Html, a, div, footer, h1, header, text, toUnstyled)
+import Html.Styled exposing (Html, a, br, div, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
 import Json.Decode as Decode
 import Keyboard as Keyboard
@@ -15,6 +15,10 @@ import Set exposing (Set)
 import Solver
 import Task as Task
 import Words exposing (charIndiciesDict, getTodaysWord, isValidWord)
+
+
+sourceCodeUrl =
+    "https://github.com/caseyWebb/YAWC"
 
 
 
@@ -339,7 +343,7 @@ viewHeader : Model -> Html Msg
 viewHeader _ =
     header []
         [ a
-            [ href "https://github.com/caseyWebb/YAWC"
+            [ href sourceCodeUrl
             , css
                 [ Css.textDecoration Css.none
                 , Css.color (Css.hex "fff")
@@ -409,9 +413,39 @@ viewFooter _ =
             , Css.color (Css.hex "3a3a3c")
             ]
     in
-    footer [ css [ Css.color (Css.hex "272729"), Css.padding (Css.px 5) ] ]
-        [ text "Made with <3 by "
-        , a [ href "https://caseyWebb.xyz", css linkStyles ] [ text "Casey Webb" ]
+    footer
+        [ css
+            [ Css.color (Css.hex "272729")
+            , Css.padding (Css.rem 1)
+            , Css.fontSize (Css.rem 1.2)
+            ]
+        ]
+        [ div
+            [ css
+                [ Css.textAlign Css.center
+                ]
+            ]
+            [ text "Made with <3 by "
+            , a [ href "https://caseyWebb.xyz", css linkStyles ] [ text "Casey Webb" ]
+            , a
+                [ href sourceCodeUrl
+                , css
+                    (linkStyles
+                        ++ [ Css.paddingTop (Css.rem 0.5)
+                           , Css.display Css.block
+                           ]
+                    )
+                ]
+                [ text "Source Code" ]
+            ]
+        , div
+            [ css
+                [ Css.position Css.fixed
+                , Css.bottom (Css.rem 1)
+                , Css.right (Css.rem 1)
+                ]
+            ]
+            [ text "Press ? for a hint" ]
         ]
 
 
