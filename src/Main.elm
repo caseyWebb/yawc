@@ -5,8 +5,9 @@ import Browser.Events exposing (onKeyDown, onKeyPress)
 import Css as Css
 import Dict exposing (Dict)
 import Grid as Grid
-import Html.Styled exposing (Html, a, br, div, footer, h1, header, text, toUnstyled)
+import Html.Styled exposing (Html, a, div, footer, h1, header, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href)
+import Html.Styled.Events exposing (onClick)
 import Json.Decode as Decode
 import Keyboard as Keyboard
 import LetterGuessResult exposing (..)
@@ -321,7 +322,7 @@ toKey string =
 
 view : Model -> Html Msg
 view model =
-    div
+    Html.Styled.div
         [ css
             [ Css.displayFlex
             , Css.flexDirection Css.column
@@ -355,7 +356,7 @@ viewHeader _ =
 
 viewBody : Model -> Html Msg
 viewBody model =
-    div
+    Html.Styled.div
         [ css
             [ Css.displayFlex
             , Css.flexDirection Css.column
@@ -364,7 +365,7 @@ viewBody model =
             , Css.height (Css.vh 80)
             ]
         ]
-        [ div
+        [ Html.Styled.div
             [ css [ Css.minHeight (Css.px 60) ] ]
             [ model.message |> Maybe.map viewMessage |> Maybe.withDefault (text "") ]
         , Grid.view
@@ -391,7 +392,7 @@ viewBody model =
 
 viewMessage : String -> Html Msg
 viewMessage message =
-    div
+    Html.Styled.div
         [ css
             [ Css.backgroundColor (Css.hex "fff")
             , Css.color (Css.hex "000")
@@ -420,7 +421,7 @@ viewFooter _ =
             , Css.fontSize (Css.rem 1.2)
             ]
         ]
-        [ div
+        [ Html.Styled.div
             [ css
                 [ Css.textAlign Css.center
                 ]
@@ -438,14 +439,16 @@ viewFooter _ =
                 ]
                 [ text "Source Code" ]
             ]
-        , div
+        , Html.Styled.div
             [ css
                 [ Css.position Css.fixed
                 , Css.bottom (Css.rem 1)
                 , Css.right (Css.rem 1)
+                , Css.cursor Css.pointer
                 ]
+            , onClick GetHint
             ]
-            [ text "Press ? for a hint" ]
+            [ text "Press ? or click here for a hint" ]
         ]
 
 
