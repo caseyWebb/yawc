@@ -194,30 +194,27 @@ submitCurrentGuess model =
 
 updateLetterStates : Model -> Dict Char LetterGuessResult
 updateLetterStates model =
-    let
-        newStates =
-            Dict.fromList <|
-                List.indexedMap
-                    (\guessIndex letter ->
-                        ( letter
-                        , case
-                            ( checkLetterState model guessIndex letter
-                            , Dict.get letter model.guessResults
-                            )
-                          of
-                            ( InWord newKnownGood newKnownBad, Just (InWord existingKnownGood existingKnownBad) ) ->
-                                InWord (Set.union newKnownGood existingKnownGood) (Set.union newKnownBad existingKnownBad)
-
-                            ( InWord knownGood knownBad, _ ) ->
-                                InWord knownGood knownBad
-
-                            ( _, _ ) ->
-                                NotInWord
-                        )
+    List.foldr
+        (\( guessIndex, letter ) acc ->
+            Dict.union
+                (case
+                    ( checkLetterState model guessIndex letter
+                    , Dict.get letter acc
                     )
-                    (String.toList model.currentGuess)
-    in
-    Dict.union newStates model.guessResults
+                 of
+                    ( InWord newKnownGood newKnownBad, Just (InWord existingKnownGood existingKnownBad) ) ->
+                        Dict.singleton letter <| InWord (Set.union newKnownGood existingKnownGood) (Set.union newKnownBad existingKnownBad)
+
+                    ( InWord knownGood knownBad, _ ) ->
+                        Dict.singleton letter <| InWord knownGood knownBad
+
+                    ( _, _ ) ->
+                        Dict.singleton letter NotInWord
+                )
+                acc
+        )
+        model.guessResults
+        (String.toList model.currentGuess |> List.indexedMap Tuple.pair)
 
 
 checkLetterState : Model -> Int -> Char -> LetterGuessResult
