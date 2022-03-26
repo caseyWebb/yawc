@@ -1,5 +1,3 @@
-# yawc
-
-> Yet Another Wordle Clone
+# Yet Another Wordle Clone
 
 [Demo](https://caseyWebb.xyz/yawc)
