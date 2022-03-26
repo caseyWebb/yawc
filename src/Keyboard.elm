@@ -2,6 +2,7 @@ module Keyboard exposing (Msg(..), view)
 
 import Colors as Colors
 import Css as Css
+import Css.Transitions as Transitions
 import Dict as Dict exposing (Dict)
 import Html.Styled exposing (Html, button, div, text)
 import Html.Styled.Attributes exposing (css)
@@ -88,6 +89,9 @@ viewButton model toMsg letter =
             , Css.borderRadius (Css.px 4)
             , Css.borderStyle Css.none
             , Css.cursor Css.pointer
+            , Transitions.transition
+                [ Transitions.backgroundColor3 100 1500 Transitions.ease
+                ]
             ]
         , onClick
             ((if isBackspace then
